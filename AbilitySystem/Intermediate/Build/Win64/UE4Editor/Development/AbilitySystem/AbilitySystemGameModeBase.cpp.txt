@@ -1,0 +1,7 @@
+C:\Users\ethan\Documents\Unreal Projects\AbilitySystem\Intermediate\Build\Win64\UE4Editor\Development\AbilitySystem\Definitions.AbilitySystem.h
+C:\Users\ethan\Documents\Unreal Projects\AbilitySystem\Source\AbilitySystem\AbilitySystemGameModeBase.h
+D:\Epic Launcher\Epic Games\UE_4.27\Engine\Source\Runtime\Engine\Classes\GameFramework/GameModeBase.h
+D:\Epic Launcher\Epic Games\UE_4.27\Engine\Source\Runtime\Engine\Classes\Engine/ServerStatReplicator.h
+D:\Epic Launcher\Epic Games\UE_4.27\Engine\Intermediate\Build\Win64\UE4Editor\Inc\Engine\ServerStatReplicator.generated.h
+D:\Epic Launcher\Epic Games\UE_4.27\Engine\Intermediate\Build\Win64\UE4Editor\Inc\Engine\GameModeBase.generated.h
+C:\Users\ethan\Documents\Unreal Projects\AbilitySystem\Intermediate\Build\Win64\UE4Editor\Inc\AbilitySystem\AbilitySystemGameModeBase.generated.h

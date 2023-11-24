@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\AbilitySystem.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{653B4001-56B6-4D2E-B5FA-E262EA1C1AE9}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\AbilitySystem.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\AbilitySystemEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{F6E8F0DD-DE72-4A6B-9A67-9FD704C22756}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\AbilitySystem">
+      <UniqueIdentifier>{9CC96BD0-464E-4F4F-AD7A-7FC18A6A1F05}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\AbilitySystem\AbilitySystem.Build.cs">
+      <Filter>Source\AbilitySystem</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\AbilitySystem\AbilitySystem.cpp">
+      <Filter>Source\AbilitySystem</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\AbilitySystem\AbilitySystem.h">
+      <Filter>Source\AbilitySystem</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\AbilitySystem\AbilitySystemGameModeBase.cpp">
+      <Filter>Source\AbilitySystem</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\AbilitySystem\AbilitySystemGameModeBase.h">
+      <Filter>Source\AbilitySystem</Filter>
+    </ClInclude>
+    <Filter Include="Source\AbilitySystem\Player">
+      <UniqueIdentifier>{7607F0E1-2726-4B2D-90EF-3BE948924915}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\AbilitySystem\Player\PlayerCharacter.cpp">
+      <Filter>Source\AbilitySystem\Player</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\AbilitySystem\Player\PlayerCharacter.h">
+      <Filter>Source\AbilitySystem\Player</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
