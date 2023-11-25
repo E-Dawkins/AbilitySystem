@@ -28,14 +28,36 @@ public:
 
 private:
 	UFUNCTION()
-	void MoveForward(float Axis);
+	void MoveForward(float Value);
 
 	UFUNCTION()
-	void MoveRight(float Axis);
+	void MoveRight(float Value);
+
+	UFUNCTION()
+	void ToggleCrouch();
+
+	UFUNCTION()
+	void ToggleSprint();
+
+	UFUNCTION()
+	void OnAbilityUsed();
 
 private:
-	// X => Forward, Y => Right
+	// In cm/s
 	UPROPERTY(EditAnywhere, Category = "Character")
-	FVector2D MoveSpeeds = FVector2D(1, 1);
+	float MaxWalkSpeed = 600.f;
+
+	// In cm/s
+	UPROPERTY(EditAnywhere, Category = "Character")
+	float MaxSprintSpeed = 1000.f;
+
+	// In cm/s
+	UPROPERTY(EditAnywhere, Category = "Character")
+	float MaxCrouchSpeed = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = "Character")
+	TSubclassOf<class UBaseAbility> CurrentAbility;
+
+	bool bIsSprinting = false;
 
 };
