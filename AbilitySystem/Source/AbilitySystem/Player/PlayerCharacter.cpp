@@ -5,25 +5,21 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "../Abilities/BaseAbility.h"
 
-// Sets default values
 APlayerCharacter::APlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
 	if (CurrentAbility)
 	{
-		CurrentAbility.GetDefaultObject()->OnActivation();
+		CurrentAbility.GetDefaultObject()->OnActivation(GetWorld());
 	}
 }
 
-// Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -33,9 +29,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 		MoveComp->MaxWalkSpeed = bIsSprinting ? MaxSprintSpeed : MaxWalkSpeed;
 		MoveComp->MaxWalkSpeedCrouched = MaxCrouchSpeed;
 	}
+
+	if (CurrentAbility)
+	{
+		CurrentAbility.GetDefaultObject()->Update(this, DeltaTime);
+	}
 }
 
-// Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);

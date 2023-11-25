@@ -2,9 +2,8 @@
 
 
 #include "BaseAbility.h"
-#include "../Player/PlayerCharacter.h"
 
-void UBaseAbility::OnActivation()
+void UBaseAbility::OnActivation(UWorld* World)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Base ability activated"));
 }
@@ -20,7 +19,7 @@ void UBaseAbility::OnUse(APlayerCharacter* Player)
 	}
 }
 
-void UBaseAbility::Update(APlayerCharacter* Player)
+void UBaseAbility::Update(APlayerCharacter* Player, float DeltaSeconds)
 {
 	FString DebugMessage = "Base ability updated, but called with Player == nullptr!";
 
