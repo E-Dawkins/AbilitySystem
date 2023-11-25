@@ -1,3 +1,0 @@
-C:\Users\ethan\Documents\Unreal Projects\AbilitySystem\Intermediate\Build\Win64\UE4Editor\Development\AbilitySystem\Definitions.AbilitySystem.h
-D:\Epic Launcher\Epic Games\UE_4.27\Engine\Source\Runtime\CoreUObject\Public\UObject/GeneratedCppIncludes.h
-D:\Epic Launcher\Epic Games\UE_4.27\Engine\Source\Runtime\CoreUObject\Public\UObject/MetaData.h

@@ -1,2 +1,0 @@
-C:\Users\ethan\Documents\Unreal Projects\AbilitySystem\Intermediate\Build\Win64\UE4Editor\Development\AbilitySystem\Definitions.AbilitySystem.h
-C:\Users\ethan\Documents\Unreal Projects\AbilitySystem\Source\AbilitySystem\AbilitySystem.h
