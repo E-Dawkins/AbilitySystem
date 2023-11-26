@@ -4,7 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "BaseAbility.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Ab_Teleport.generated.h"
+
+USTRUCT(Atomic)
+struct FTeleportCursor
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> CursorClass;
+
+	UPROPERTY(EditAnywhere)
+	FVector Scale = FVector::OneVector;
+
+	UPROPERTY(EditAnywhere)
+	FRotator Rotation = FRotator::ZeroRotator;
+};
 
 /**
  * 
@@ -21,21 +38,36 @@ public:
 	virtual void OnDeactivation() override;
 
 private:
-	bool GetTeleportLocation(APlayerCharacter* Player, FVector& TeleportLocation);
+	void GetTeleportLocation(APlayerCharacter* Player, FVector& TeleportLocation, FVector& CursorLocation, bool& CanTeleport, bool& CanMantle);
+
+	void GetAllSphereTraceHits(const UObject* WorldContextObject, const FVector OrigStart, const FVector Start, const FVector End, float Radius, ECollisionChannel TraceChannel,
+		bool bTraceComplex, const TArray<AActor*>& IgnoredActors, EDrawDebugTrace::Type DrawDebugType, bool bIgnoreSelf, TArray<FHitResult>& OutHits, int MaxIterations = 10);
+
+	bool FreeHeadRoom(APlayerCharacter* Player, FVector PlayerCenterAtNewLocation);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Teleport")
-	TSubclassOf<AActor> Cursor;
+	FTeleportCursor NormalCursor;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
-	FVector CursorScale = FVector::OneVector;
-
-	UPROPERTY(EditAnywhere, Category = "Teleport")
-	FRotator CursorRotation;
+	FTeleportCursor LedgeCursor;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
 	float TeleportRange = 500.f;
 
-	AActor* CursorPtr;
+	// How far away from a top edge to teleport on top of it
+	UPROPERTY(EditAnywhere, Category = "Teleport")
+	float EdgeTolerance = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport")
+	bool bDebug = false;
+
+	AActor* NormalCursorPtr;
+	AActor* LedgeCursorPtr;
+
+	FVector LocationToTeleport;
+	FVector LocationForCursor;
+	bool bCanTeleport;
+	bool bCanMantle;
 	
 };
