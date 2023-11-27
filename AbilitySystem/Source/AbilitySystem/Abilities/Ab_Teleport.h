@@ -38,12 +38,12 @@ public:
 	virtual void OnDeactivation() override;
 
 private:
-	void GetTeleportLocation(APlayerCharacter* Player, FVector& TeleportLocation, FVector& CursorLocation, bool& CanTeleport, bool& CanMantle);
+	void GetTeleportVariables(APlayerCharacter* _Player);
 
 	void GetAllSphereTraceHits(const UObject* WorldContextObject, const FVector OrigStart, const FVector Start, const FVector End, float Radius, ECollisionChannel TraceChannel,
 		bool bTraceComplex, const TArray<AActor*>& IgnoredActors, EDrawDebugTrace::Type DrawDebugType, bool bIgnoreSelf, TArray<FHitResult>& OutHits, int MaxIterations = 10);
 
-	bool FreeHeadRoom(APlayerCharacter* Player, FVector PlayerCenterAtNewLocation);
+	bool FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Teleport")
@@ -65,9 +65,10 @@ private:
 	AActor* NormalCursorPtr;
 	AActor* LedgeCursorPtr;
 
-	FVector LocationToTeleport;
-	FVector LocationForCursor;
+	FVector TeleportLocation;
+	FVector CursorLocation;
 	bool bCanTeleport;
 	bool bCanMantle;
+	bool bShouldCrouch;
 	
 };
