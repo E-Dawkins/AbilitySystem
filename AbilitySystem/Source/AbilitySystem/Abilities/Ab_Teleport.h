@@ -32,16 +32,17 @@ class ABILITYSYSTEM_API UAb_Teleport : public UBaseAbility
 	GENERATED_BODY()
 
 public:
-	virtual void OnActivation(UWorld* World) override;
-	virtual void OnUse(APlayerCharacter* Player) override;
-	virtual void Update(APlayerCharacter* Player, float DeltaSeconds) override;
+	virtual void OnActivation(UWorld* _World) override;
+	virtual void OnUse(APlayerCharacter* _Player) override;
+	virtual void Update(APlayerCharacter* _Player, float _DeltaSeconds) override;
 	virtual void OnDeactivation() override;
 
 private:
 	void GetTeleportVariables(APlayerCharacter* _Player);
+	void GetTeleportVariables2(APlayerCharacter* _Player);
 
-	void GetAllSphereTraceHits(const UObject* WorldContextObject, const FVector OrigStart, const FVector Start, const FVector End, float Radius, ECollisionChannel TraceChannel,
-		bool bTraceComplex, const TArray<AActor*>& IgnoredActors, EDrawDebugTrace::Type DrawDebugType, bool bIgnoreSelf, TArray<FHitResult>& OutHits, int MaxIterations = 10);
+	void RecursiveSphereTrace(const UObject* _WorldContextObject, const FVector _OrigStart, const FVector _Start, const FVector _End, float _Radius, ECollisionChannel _TraceChannel,
+		bool _bTraceComplex, const TArray<AActor*>& _IgnoredActors, EDrawDebugTrace::Type _DrawDebugType, bool _bIgnoreSelf, TArray<FHitResult>& _OutHits, int _MaxIterations = 10);
 
 	bool FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck);
 
@@ -61,6 +62,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
 	bool bDebug = false;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport")
+	bool bUseNewSystem = false;
 
 	AActor* NormalCursorPtr;
 	AActor* LedgeCursorPtr;
