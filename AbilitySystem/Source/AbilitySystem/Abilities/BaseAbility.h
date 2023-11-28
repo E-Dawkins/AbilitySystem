@@ -17,12 +17,12 @@ class ABILITYSYSTEM_API UBaseAbility : public UObject
 
 public:
 	// Put set-up code here, i.e. spawning a cursor particle
-	virtual void OnActivation(UWorld* World);
+	virtual void OnActivation(UWorld* _World);
 
 	// Put actual ability code here, i.e. teleport the player
-	virtual void OnUse(APlayerCharacter* Player);
+	virtual void OnUse(APlayerCharacter* _Player);
 
-	virtual void Update(APlayerCharacter* Player, float DeltaSeconds);
+	virtual void Update(APlayerCharacter* _Player, float _DeltaSeconds);
 
 	virtual void OnDeactivation();
 	

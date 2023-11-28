@@ -28,10 +28,10 @@ public:
 
 private:
 	UFUNCTION()
-	void MoveForward(float Value);
+	void MoveForward(float _Value);
 
 	UFUNCTION()
-	void MoveRight(float Value);
+	void MoveRight(float _Value);
 
 	UFUNCTION()
 	void ToggleCrouch();

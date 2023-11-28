@@ -54,14 +54,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &ACharacter::AddControllerYawInput);
 }
 
-void APlayerCharacter::MoveForward(float Value)
+void APlayerCharacter::MoveForward(float _Value)
 {
-	AddMovementInput(GetActorForwardVector(), Value);
+	AddMovementInput(GetActorForwardVector(), _Value);
 }
 
-void APlayerCharacter::MoveRight(float Value)
+void APlayerCharacter::MoveRight(float _Value)
 {
-	AddMovementInput(GetActorRightVector(), Value);
+	AddMovementInput(GetActorRightVector(), _Value);
 }
 
 void APlayerCharacter::ToggleCrouch()

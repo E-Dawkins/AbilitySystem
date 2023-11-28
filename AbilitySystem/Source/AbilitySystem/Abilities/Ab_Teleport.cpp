@@ -338,8 +338,8 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 	return !ObjectBlocking;
 }
 
-FVector UAb_Teleport::GetUpFromForward(FVector Forward)
+FVector UAb_Teleport::GetUpFromForward(FVector _Forward)
 {
-	FVector Right = FVector::CrossProduct(Forward, FVector::UpVector).GetSafeNormal();
-	return FVector::CrossProduct(Right, Forward);
+	FVector Right = FVector::CrossProduct(_Forward, FVector::UpVector).GetSafeNormal();
+	return FVector::CrossProduct(Right, _Forward);
 }
