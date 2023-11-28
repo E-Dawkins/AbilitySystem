@@ -68,9 +68,36 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float WallDotTolerance = 0.15f;
 
-	UPROPERTY(EditAnywhere, Category = "Teleport")
-	bool bDebug = false;
+#pragma region Debugging
 
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging")
+	bool bDrawStats = false;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging")
+	bool bDrawHeadRoom = false;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawHeadRoom", EditConditionHides))
+	FColor HeadRoomFail = FColor::Red;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawHeadRoom", EditConditionHides))
+	FColor HeadRoomSucceed = FColor::Green;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging")
+	bool bDrawMantle = false;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
+	FColor MantleDirection = FColor::Purple;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
+	FColor SphereTraceFail = FColor::Red;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
+	FColor SphereTraceSucceed = FColor::Green;
+
+
+#pragma endregion
+
+private:
 	AActor* NormalCursorPtr;
 	AActor* LedgeCursorPtr;
 	AActor* CrouchCursorPtr;

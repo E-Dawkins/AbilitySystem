@@ -78,7 +78,7 @@ void UAb_Teleport::Update(APlayerCharacter* _Player, float _DeltaSeconds)
 		CrouchCursorPtr->SetActorHiddenInGame(!bCanTeleport || bCanMantle || !bShouldCrouch);
 	}
 
-	if (bDebug)
+	if (bDrawStats)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, -1, bCanTeleport ? FColor::Green : FColor::Red, FString("Teleport"));
 		GEngine->AddOnScreenDebugMessage(-1, -1, bCanMantle ? FColor::Green : FColor::Red, FString("Mantle"));
@@ -185,13 +185,13 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 
 			bCanMantle = FVector::Dist(InitialTraceHit.ImpactPoint, HitResultArr.Last().ImpactPoint) <= EdgeTolerance;
 
-			if (bDebug)
+			if (bDrawMantle)
 			{
-				DrawDebugLine(_Player->GetWorld(), InitialTraceHit.ImpactPoint, InitialTraceHit.ImpactPoint + NormalUpVector * 100.f, FColor::Purple, false, -1.f, 0, 5.f);
+				DrawDebugLine(_Player->GetWorld(), InitialTraceHit.ImpactPoint, InitialTraceHit.ImpactPoint + NormalUpVector * 100.f, MantleDirection, false, -1.f, 0, 3.f);
 
 				for (auto& Hit : HitResultArr)
 				{
-					DrawDebugSphere(_Player->GetWorld(), Hit.ImpactPoint, 10.f, 12, bCanMantle ? FColor::Green : FColor::Red);
+					DrawDebugSphere(_Player->GetWorld(), Hit.ImpactPoint, 10.f, 12, bCanMantle ? SphereTraceSucceed : SphereTraceFail);
 				}
 			}
 		}
@@ -319,7 +319,7 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 		FCollisionShape::MakeCapsule(FVector(PlayerRadius, PlayerRadius, _PlayerHalfHeightToCheck))
 	);
 
-	if (bDebug)
+	if (bDrawHeadRoom)
 	{
 		DrawDebugCapsule
 		(
@@ -328,7 +328,7 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 			_PlayerHalfHeightToCheck,
 			PlayerRadius,
 			FQuat::Identity,
-			ObjectBlocking ? FColor::Red : FColor::Green
+			ObjectBlocking ? HeadRoomFail : HeadRoomSucceed
 		);
 	}
 
