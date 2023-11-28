@@ -39,12 +39,13 @@ public:
 
 private:
 	void GetTeleportVariables(APlayerCharacter* _Player);
-	void GetTeleportVariables2(APlayerCharacter* _Player);
 
 	void RecursiveSphereTrace(const UObject* _WorldContextObject, const FVector _OrigStart, const FVector _Start, const FVector _End, float _Radius, ECollisionChannel _TraceChannel,
 		bool _bTraceComplex, const TArray<AActor*>& _IgnoredActors, EDrawDebugTrace::Type _DrawDebugType, bool _bIgnoreSelf, TArray<FHitResult>& _OutHits, int _MaxIterations = 10);
 
-	bool FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck);
+	bool FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FHitResult& OverlapHit);
+
+	FVector GetUpFromForward(FVector ForwardVector);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Teleport")
@@ -54,20 +55,25 @@ private:
 	FTeleportCursor LedgeCursor;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
+	FTeleportCursor CrouchCursor;
+
+	UPROPERTY(EditAnywhere, Category = "Teleport")
 	float TeleportRange = 500.f;
 
 	// How far away from a top edge to teleport on top of it
 	UPROPERTY(EditAnywhere, Category = "Teleport")
 	float EdgeTolerance = 50.f;
 
+	// How steep before a wall is not counted as a wall
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float WallDotTolerance = 0.15f;
+
 	UPROPERTY(EditAnywhere, Category = "Teleport")
 	bool bDebug = false;
 
-	UPROPERTY(EditAnywhere, Category = "Teleport")
-	bool bUseNewSystem = false;
-
 	AActor* NormalCursorPtr;
 	AActor* LedgeCursorPtr;
+	AActor* CrouchCursorPtr;
 
 	FVector TeleportLocation;
 	FVector CursorLocation;
