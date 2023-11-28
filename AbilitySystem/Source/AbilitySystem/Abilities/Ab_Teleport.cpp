@@ -206,30 +206,34 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		}
 	}
 
-	// -- Check head room 1 --
+	// -- Check head room  --
 	float CrouchTPOffset = PlayerHalfHeight - PlayerCrouchedHalfHeight;
 	FHitResult Overlap;
 	FHitResult Throwaway;
 
+	FVector FinalTPLocation = TeleportLocation;
+
 	{
 		// Check if there is room to teleport player standing up
 		FVector PlayerExtentStand = _Player->GetSimpleCollisionCylinderExtent();
-		FVector PlayerExtentCrouch = FVector(_Player->GetSimpleCollisionRadius(), _Player->GetSimpleCollisionRadius(), _Player->GetCharacterMovement()->CrouchedHalfHeight);
+		FVector PlayerExtentCrouch = FVector(PlayerRadius, PlayerRadius, PlayerCrouchedHalfHeight);
+
 		bCanTeleport = FreeHeadRoom(_Player, TeleportLocation, PlayerHalfHeight, Overlap); // standing check #1
 
 		if (!bCanTeleport) // cant teleport standing in orig location
 		{
-			bCanTeleport = FreeHeadRoom(_Player, TeleportLocation + Overlap.ImpactNormal * PlayerExtentStand, PlayerHalfHeight, Throwaway); // standing check #2
+			FinalTPLocation += Overlap.ImpactNormal * PlayerExtentStand;
+			bCanTeleport = FreeHeadRoom(_Player, FinalTPLocation, PlayerHalfHeight, Throwaway); // standing check #2
 
 			if (!bCanTeleport) // no standing room, check if the player can teleport crouching
 			{
-				TeleportLocation -= FVector::UpVector * CrouchTPOffset;
-
-				bShouldCrouch = FreeHeadRoom(_Player, TeleportLocation, PlayerCrouchedHalfHeight, Overlap); // crouch check #1
+				FinalTPLocation = TeleportLocation;
+				bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, Overlap); // crouch check #1
 
 				if (!bShouldCrouch)
 				{
-					bShouldCrouch = FreeHeadRoom(_Player, TeleportLocation + Overlap.ImpactNormal * PlayerExtentCrouch, PlayerCrouchedHalfHeight, Throwaway); // crouch check #2
+					FinalTPLocation += Overlap.ImpactNormal * PlayerExtentCrouch;
+					bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, Throwaway); // crouch check #2
 				}
 
 				bCanTeleport = bShouldCrouch;
@@ -238,6 +242,7 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 	}
 
 	// Set cursor location
+	TeleportLocation = FinalTPLocation;
 	CursorLocation = TeleportLocation - FVector::UpVector * PlayerHalfHeight;
 }
 
