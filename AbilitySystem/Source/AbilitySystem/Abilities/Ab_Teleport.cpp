@@ -217,6 +217,7 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		// Check if there is room to teleport player standing up
 		FVector PlayerExtentStand = _Player->GetSimpleCollisionCylinderExtent();
 		FVector PlayerExtentCrouch = FVector(PlayerRadius, PlayerRadius, PlayerCrouchedHalfHeight);
+		float StandCrouchHeightDiff = PlayerHalfHeight - PlayerCrouchedHalfHeight;
 
 		bCanTeleport = FreeHeadRoom(_Player, TeleportLocation, PlayerHalfHeight, Overlap); // standing check #1
 
@@ -227,7 +228,7 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 
 			if (!bCanTeleport) // no standing room, check if the player can teleport crouching
 			{
-				FinalTPLocation = TeleportLocation;
+				FinalTPLocation = TeleportLocation - FVector::UpVector * StandCrouchHeightDiff;
 				bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, Overlap); // crouch check #1
 
 				if (!bShouldCrouch)
