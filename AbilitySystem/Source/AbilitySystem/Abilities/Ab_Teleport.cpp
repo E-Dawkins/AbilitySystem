@@ -121,11 +121,9 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		bShouldCrouch = false;
 	}
 
-	const float CmTolerance = 10.f;
 	const float PlayerHalfHeight = _Player->GetSimpleCollisionHalfHeight();
 	const float PlayerCrouchedHalfHeight = _Player->GetCharacterMovement()->CrouchedHalfHeight;
 	const float PlayerRadius = _Player->GetSimpleCollisionRadius();
-	const float PlayerDiameter = PlayerRadius * 2.f;
 
 	bool bLocationsSet = false;
 
@@ -196,45 +194,45 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 			}
 		}
 
+		const float CmTolerance = 5.f;
+		const FVector PlayerExtents = _Player->GetSimpleCollisionCylinderExtent();
+
 		if (bCanMantle)
 		{
 			TeleportLocation = HitResultArr.Last().ImpactPoint + FVector::UpVector * (PlayerHalfHeight + CmTolerance * 2.f);
 		}
 		else
 		{
-			TeleportLocation = InitialTraceHit.ImpactPoint + InitialTraceHit.ImpactNormal * FVector(PlayerDiameter, PlayerDiameter, PlayerHalfHeight + CmTolerance);
+			TeleportLocation = InitialTraceHit.ImpactPoint + InitialTraceHit.ImpactNormal * (PlayerExtents + FVector(CmTolerance));
 		}
 	}
 
 	// -- Check head room  --
 	float CrouchTPOffset = PlayerHalfHeight - PlayerCrouchedHalfHeight;
-	FHitResult Overlap;
-	FHitResult Throwaway;
+	FVector DepenetrationVector;
 
 	FVector FinalTPLocation = TeleportLocation;
 
 	{
-		// Check if there is room to teleport player standing up
-		FVector PlayerExtentStand = _Player->GetSimpleCollisionCylinderExtent();
-		FVector PlayerExtentCrouch = FVector(PlayerRadius, PlayerRadius, PlayerCrouchedHalfHeight);
 		float StandCrouchHeightDiff = PlayerHalfHeight - PlayerCrouchedHalfHeight;
 
-		bCanTeleport = FreeHeadRoom(_Player, TeleportLocation, PlayerHalfHeight, Overlap); // standing check #1
+		// Check if there is room to teleport player standing up
+		bCanTeleport = FreeHeadRoom(_Player, TeleportLocation, PlayerHalfHeight, DepenetrationVector); // standing check #1
 
-		if (!bCanTeleport) // cant teleport standing in orig location
+		if (!bCanTeleport) // cant teleport standing in orig location, try with penetration offset
 		{
-			FinalTPLocation += Overlap.ImpactNormal * PlayerExtentStand;
-			bCanTeleport = FreeHeadRoom(_Player, FinalTPLocation, PlayerHalfHeight, Throwaway); // standing check #2
+			FinalTPLocation += DepenetrationVector;
+			bCanTeleport = FreeHeadRoom(_Player, FinalTPLocation, PlayerHalfHeight, DepenetrationVector); // standing check #2
 
-			if (!bCanTeleport) // no standing room, check if the player can teleport crouching
+			if (!bCanTeleport && !_Player->bIsCrouched) // no standing room and not already crouched, check if the player can teleport crouching
 			{
 				FinalTPLocation = TeleportLocation - FVector::UpVector * StandCrouchHeightDiff;
-				bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, Overlap); // crouch check #1
+				bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #1
 
-				if (!bShouldCrouch)
+				if (!bShouldCrouch) // cant teleport crouching in orig location, try with penetration offset
 				{
-					FinalTPLocation += Overlap.ImpactNormal * PlayerExtentCrouch;
-					bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, Throwaway); // crouch check #2
+					FinalTPLocation += DepenetrationVector;
+					bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #2
 				}
 
 				bCanTeleport = bShouldCrouch;
@@ -242,7 +240,7 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		}
 	}
 
-	// Set cursor location
+	// Set cursor and teleport location
 	TeleportLocation = FinalTPLocation;
 	CursorLocation = TeleportLocation - FVector::UpVector * PlayerHalfHeight;
 }
@@ -299,7 +297,7 @@ void UAb_Teleport::RecursiveSphereTrace(const UObject* _WorldContextObject, cons
 	}
 }
 
-bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FHitResult& OverlapHit)
+bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector)
 {
 	if (!_Player)
 	{
@@ -310,6 +308,9 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 
 	float PlayerRadius = _Player->GetSimpleCollisionRadius();
 
+	FCollisionQueryParams QueryParams;
+	QueryParams.bFindInitialOverlaps = true; // life-saver
+
 	bool ObjectBlocking = _Player->GetWorld()->SweepSingleByChannel
 	(
 		Hit,
@@ -317,7 +318,8 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 		_PlayerCenterAtNewLocation,
 		FQuat::Identity,
 		ECollisionChannel::ECC_Visibility,
-		FCollisionShape::MakeCapsule(FVector(PlayerRadius, PlayerRadius, _PlayerHalfHeightToCheck))
+		FCollisionShape::MakeCapsule(FVector(PlayerRadius, PlayerRadius, _PlayerHalfHeightToCheck)),
+		QueryParams
 	);
 
 	if (bDrawHeadRoom)
@@ -333,7 +335,7 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 		);
 	}
 
-	OverlapHit = ObjectBlocking ? Hit : FHitResult();
+	_DepenetrationVector = Hit.Normal * (Hit.PenetrationDepth + 2.5f); // 2.5cm lee-way around player
 
 	return !ObjectBlocking;
 }
