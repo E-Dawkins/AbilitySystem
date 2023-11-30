@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "../Player/PlayerCharacter.h"
 #include "BaseAbility.generated.h"
 
@@ -17,13 +16,17 @@ class ABILITYSYSTEM_API UBaseAbility : public UObject
 
 public:
 	// Put set-up code here, i.e. spawning a cursor particle
-	virtual void OnActivation(UWorld* _World);
+	virtual void OnActivation(APlayerCharacter* _Player);
 
 	// Put actual ability code here, i.e. teleport the player
-	virtual void OnUse(APlayerCharacter* _Player);
+	virtual void OnUse();
 
-	virtual void Update(APlayerCharacter* _Player, float _DeltaSeconds);
+	virtual void Update(float _DeltaSeconds);
 
 	virtual void OnDeactivation();
+
+protected:
+	UPROPERTY()
+	APlayerCharacter* PlayerPtr;
 	
 };

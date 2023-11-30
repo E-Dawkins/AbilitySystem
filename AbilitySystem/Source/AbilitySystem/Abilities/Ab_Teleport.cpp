@@ -5,25 +5,27 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-void UAb_Teleport::OnActivation(UWorld* _World)
+void UAb_Teleport::OnActivation(APlayerCharacter* _Player)
 {
+	Super::OnActivation(_Player);
+	
 	// Spawn the teleport cursors, so player knows where they are teleporting
-	if (_World)
+	if (const auto World = _Player->GetWorld())
 	{
 		FTransform CursorTransform = FTransform(NormalCursor.Rotation, FVector::ZeroVector, NormalCursor.Scale);
-		NormalCursorPtr = _World->SpawnActor(NormalCursor.CursorClass);
+		NormalCursorPtr = World->SpawnActor(NormalCursor.CursorClass, &CursorTransform);
 
 		CursorTransform = FTransform(LedgeCursor.Rotation, FVector::ZeroVector, LedgeCursor.Scale);
-		LedgeCursorPtr = _World->SpawnActor(LedgeCursor.CursorClass);
+		LedgeCursorPtr = World->SpawnActor(LedgeCursor.CursorClass);
 
 		CursorTransform = FTransform(CrouchCursor.Rotation, FVector::ZeroVector, CrouchCursor.Scale);
-		CrouchCursorPtr = _World->SpawnActor(CrouchCursor.CursorClass);
+		CrouchCursorPtr = World->SpawnActor(CrouchCursor.CursorClass);
 	}
 }
 
-void UAb_Teleport::OnUse(APlayerCharacter* _Player)
+void UAb_Teleport::OnUse()
 {
-	if (!_Player)
+	if (!PlayerPtr)
 	{
 		return;
 	}
@@ -31,25 +33,25 @@ void UAb_Teleport::OnUse(APlayerCharacter* _Player)
 	// Check if player should be crouched
 	if (bShouldCrouch)
 	{
-		_Player->Crouch();
+		PlayerPtr->Crouch();
 	}
 
 	// Teleport the player
 	if (bCanTeleport)
 	{
-		_Player->SetActorLocation(TeleportLocation);
+		PlayerPtr->SetActorLocation(TeleportLocation);
 	}
 }
 
-void UAb_Teleport::Update(APlayerCharacter* _Player, float _DeltaSeconds)
+void UAb_Teleport::Update(float _DeltaSeconds)
 {
-	if (!_Player)
+	if (!PlayerPtr)
 	{
 		return;
 	}
 
 	// -- Update cursors transform (rotation, scale, location) --
-	GetTeleportVariables(_Player);
+	GetTeleportVariables(PlayerPtr);
 	
 	if (NormalCursorPtr)
 	{
@@ -158,14 +160,15 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		float Dot = FMath::Abs(FVector::DotProduct(FVector::UpVector, InitialTraceHit.ImpactNormal));
 		bool bIsWall = Dot <= WallDotTolerance;
 
-		TArray<AActor*> IgnoredActors;
 		TArray<FHitResult> HitResultArr;
 
 		FVector NormalUpVector = GetUpFromForward(InitialTraceHit.ImpactNormal);
-		float SphereTraceRadius = 10.f;
 
 		if (bIsWall)
 		{
+			float SphereTraceRadius = 10.f;
+			TArray<AActor*> IgnoredActors;
+			
 			RecursiveSphereTrace
 			(
 				_Player,
@@ -194,7 +197,7 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 			}
 		}
 
-		const float CmTolerance = 5.f;
+		constexpr float CmTolerance = 5.f;
 		const FVector PlayerExtents = _Player->GetSimpleCollisionCylinderExtent();
 
 		if (bCanMantle)
@@ -207,13 +210,10 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		}
 	}
 
-	// -- Check head room  --
-	float CrouchTPOffset = PlayerHalfHeight - PlayerCrouchedHalfHeight;
-	FVector DepenetrationVector;
-
-	FVector FinalTPLocation = TeleportLocation;
+	FVector FinalTpLocation = TeleportLocation;
 
 	{
+		FVector DepenetrationVector;
 		float StandCrouchHeightDiff = PlayerHalfHeight - PlayerCrouchedHalfHeight;
 
 		// Check if there is room to teleport player standing up
@@ -221,18 +221,18 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 
 		if (!bCanTeleport) // cant teleport standing in orig location, try with penetration offset
 		{
-			FinalTPLocation += DepenetrationVector;
-			bCanTeleport = FreeHeadRoom(_Player, FinalTPLocation, PlayerHalfHeight, DepenetrationVector); // standing check #2
+			FinalTpLocation += DepenetrationVector;
+			bCanTeleport = FreeHeadRoom(_Player, FinalTpLocation, PlayerHalfHeight, DepenetrationVector); // standing check #2
 
 			if (!bCanTeleport && !_Player->bIsCrouched) // no standing room and not already crouched, check if the player can teleport crouching
 			{
-				FinalTPLocation = TeleportLocation - FVector::UpVector * StandCrouchHeightDiff;
-				bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #1
+				FinalTpLocation = TeleportLocation - FVector::UpVector * StandCrouchHeightDiff;
+				bShouldCrouch = FreeHeadRoom(_Player, FinalTpLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #1
 
 				if (!bShouldCrouch) // cant teleport crouching in orig location, try with penetration offset
 				{
-					FinalTPLocation += DepenetrationVector;
-					bShouldCrouch = FreeHeadRoom(_Player, FinalTPLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #2
+					FinalTpLocation += DepenetrationVector;
+					bShouldCrouch = FreeHeadRoom(_Player, FinalTpLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #2
 				}
 
 				bCanTeleport = bShouldCrouch;
@@ -241,7 +241,7 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 	}
 
 	// Set cursor and teleport location
-	TeleportLocation = FinalTPLocation;
+	TeleportLocation = FinalTpLocation;
 	CursorLocation = TeleportLocation - FVector::UpVector * PlayerHalfHeight;
 }
 
@@ -282,10 +282,10 @@ void UAb_Teleport::RecursiveSphereTrace(const UObject* _WorldContextObject, cons
 			return;
 		}
 
-		// Check if the original direction is equal to the current direction
+		// Check if the original direction is facing same as the current direction
 		// So when the passed in trace start passes the end point, early return
-		FVector OrigDirection = (_End - _OrigStart).GetSafeNormal();
-		FVector Direction = (_End - _Start).GetSafeNormal();
+		const FVector OrigDirection = (_End - _OrigStart).GetSafeNormal();
+		const FVector Direction = (_End - _Start).GetSafeNormal();
 
 		if (FVector::DotProduct(OrigDirection, Direction) < 0)
 		{
@@ -297,7 +297,7 @@ void UAb_Teleport::RecursiveSphereTrace(const UObject* _WorldContextObject, cons
 	}
 }
 
-bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector)
+bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector) const
 {
 	if (!_Player)
 	{
@@ -342,6 +342,6 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 
 FVector UAb_Teleport::GetUpFromForward(FVector _Forward)
 {
-	FVector Right = FVector::CrossProduct(_Forward, FVector::UpVector).GetSafeNormal();
+	const FVector Right = FVector::CrossProduct(_Forward, FVector::UpVector).GetSafeNormal();
 	return FVector::CrossProduct(Right, _Forward);
 }

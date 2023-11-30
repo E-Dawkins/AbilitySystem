@@ -16,7 +16,7 @@ void APlayerCharacter::BeginPlay()
 
 	if (CurrentAbility)
 	{
-		CurrentAbility.GetDefaultObject()->OnActivation(GetWorld());
+		CurrentAbility.GetDefaultObject()->OnActivation(this);
 	}
 }
 
@@ -24,7 +24,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (auto MoveComp = GetCharacterMovement())
+	if (const auto MoveComp = GetCharacterMovement())
 	{
 		MoveComp->MaxWalkSpeed = bIsSprinting ? MaxSprintSpeed : MaxWalkSpeed;
 		MoveComp->MaxWalkSpeedCrouched = MaxCrouchSpeed;
@@ -32,7 +32,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	if (CurrentAbility)
 	{
-		CurrentAbility.GetDefaultObject()->Update(this, DeltaTime);
+		CurrentAbility.GetDefaultObject()->Update(DeltaTime);
 	}
 }
 
@@ -85,6 +85,6 @@ void APlayerCharacter::OnAbilityUsed()
 {
 	if (CurrentAbility)
 	{
-		CurrentAbility.GetDefaultObject()->OnUse(this);
+		CurrentAbility.GetDefaultObject()->OnUse();
 	}
 }

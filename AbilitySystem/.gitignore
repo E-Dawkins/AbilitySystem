@@ -3,6 +3,8 @@
 
 # JetBrains Rider specific files
 .idea/
+Plugins/*/RiderLink/Binaries/
+Plugins/*/RiderLink/Intermediate/
 
 # Compiled Object files
 *.slo

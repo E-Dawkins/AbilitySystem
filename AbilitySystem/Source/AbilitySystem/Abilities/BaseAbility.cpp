@@ -3,34 +3,22 @@
 
 #include "BaseAbility.h"
 
-void UBaseAbility::OnActivation(UWorld* _World)
+void UBaseAbility::OnActivation(APlayerCharacter* _Player)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Base ability activated"));
+	PlayerPtr = _Player;
 }
 
-void UBaseAbility::OnUse(APlayerCharacter* _Player)
+void UBaseAbility::OnUse()
 {
-	FString DebugMessage = "Base ability used, but called with Player == nullptr!";
-
-	if (_Player)
-	{
-		DebugMessage = FString::Printf(TEXT("Base ability used by %s"), *_Player->GetName());
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, DebugMessage);
-	}
+	
 }
 
-void UBaseAbility::Update(APlayerCharacter* _Player, float _DeltaSeconds)
+void UBaseAbility::Update(float _DeltaSeconds)
 {
-	FString DebugMessage = "Base ability updated, but called with Player == nullptr!";
-
-	if (_Player)
-	{
-		DebugMessage = FString::Printf(TEXT("Base ability updated by %s"), *_Player->GetName());
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, DebugMessage);
-	}
+	
 }
 
 void UBaseAbility::OnDeactivation()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Base ability de-activated"));
+	
 }
