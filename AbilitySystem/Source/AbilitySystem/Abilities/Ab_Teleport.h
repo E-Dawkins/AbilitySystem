@@ -7,22 +7,6 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Ab_Teleport.generated.h"
 
-USTRUCT(Atomic)
-struct FTeleportCursor
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> CursorClass;
-
-	UPROPERTY(EditAnywhere)
-	FVector Scale = FVector::OneVector;
-
-	UPROPERTY(EditAnywhere)
-	FRotator Rotation = FRotator::ZeroRotator;
-};
-
 /**
  * 
  */
@@ -38,27 +22,27 @@ public:
 	virtual void OnDeactivation() override;
 
 private:
-	void GetTeleportVariables(APlayerCharacter* _Player);
+	void GetTeleportVariables();
 
-	static void RecursiveSphereTrace(const UObject* _WorldContextObject, const FVector _OrigStart, const FVector _Start, const FVector _End, float _Radius, ECollisionChannel _TraceChannel,
-	                                 bool _bTraceComplex, const TArray<AActor*>& _IgnoredActors, EDrawDebugTrace::Type _DrawDebugType, bool _bIgnoreSelf, TArray<FHitResult>& _OutHits, int _MaxIterations = 10);
+	void RecursiveSphereTrace(const FVector _OrigStart, const FVector _Start, const FVector _End,
+		const float _Radius, TArray<FHitResult>& _OutHits, int _MaxIterations = 10);
 
-	bool FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector) const;
+	bool FreeHeadRoom(FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector) const;
 
 	static FVector GetUpFromForward(FVector _Forward);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Teleport")
-	FTeleportCursor NormalCursor;
+	TSubclassOf<AActor> NormalCursor;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
-	FTeleportCursor LedgeCursor;
+	TSubclassOf<AActor> LedgeCursor;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
-	FTeleportCursor CrouchCursor;
+	TSubclassOf<AActor> CrouchCursor;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport")
-	float TeleportRange = 500.f;
+	float TeleportRange = 1000.f;
 
 	// How far away from a top edge to teleport on top of it
 	UPROPERTY(EditAnywhere, Category = "Teleport")
@@ -66,7 +50,7 @@ private:
 
 	// How steep before a wall is not counted as a wall
 	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float WallDotTolerance = 0.15f;
+	float WallDotTolerance = 0.6f;
 
 #pragma region Debugging
 
@@ -109,7 +93,6 @@ private:
 
 	FVector TeleportLocation;
 	FVector CursorLocation;
-	bool bCanTeleport;
 	bool bCanMantle;
 	bool bShouldCrouch;
 	

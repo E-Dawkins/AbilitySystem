@@ -8,18 +8,21 @@
 void UAb_Teleport::OnActivation(APlayerCharacter* _Player)
 {
 	Super::OnActivation(_Player);
+
+	if (!PlayerPtr)
+	{
+		return;
+	}
+
+	TeleportLocation = PlayerPtr->GetActorLocation();
+	CursorLocation = TeleportLocation - FVector::UpVector * PlayerPtr->GetSimpleCollisionHalfHeight();
 	
 	// Spawn the teleport cursors, so player knows where they are teleporting
-	if (const auto World = _Player->GetWorld())
+	if (const auto World = PlayerPtr->GetWorld())
 	{
-		FTransform CursorTransform = FTransform(NormalCursor.Rotation, FVector::ZeroVector, NormalCursor.Scale);
-		NormalCursorPtr = World->SpawnActor(NormalCursor.CursorClass, &CursorTransform);
-
-		CursorTransform = FTransform(LedgeCursor.Rotation, FVector::ZeroVector, LedgeCursor.Scale);
-		LedgeCursorPtr = World->SpawnActor(LedgeCursor.CursorClass);
-
-		CursorTransform = FTransform(CrouchCursor.Rotation, FVector::ZeroVector, CrouchCursor.Scale);
-		CrouchCursorPtr = World->SpawnActor(CrouchCursor.CursorClass);
+		NormalCursorPtr = World->SpawnActor(NormalCursor);
+		LedgeCursorPtr = World->SpawnActor(LedgeCursor);
+		CrouchCursorPtr = World->SpawnActor(CrouchCursor);
 	}
 }
 
@@ -37,10 +40,7 @@ void UAb_Teleport::OnUse()
 	}
 
 	// Teleport the player
-	if (bCanTeleport)
-	{
-		PlayerPtr->SetActorLocation(TeleportLocation);
-	}
+	PlayerPtr->SetActorLocation(TeleportLocation);
 }
 
 void UAb_Teleport::Update(float _DeltaSeconds)
@@ -50,84 +50,56 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 		return;
 	}
 
-	// -- Update cursors transform (rotation, scale, location) --
-	GetTeleportVariables(PlayerPtr);
+	// -- Update cursors' location
+	GetTeleportVariables();
 	
 	if (NormalCursorPtr)
 	{
-		NormalCursorPtr->SetActorRotation(NormalCursor.Rotation);
-		NormalCursorPtr->SetActorScale3D(NormalCursor.Scale);
-
 		NormalCursorPtr->SetActorLocation(CursorLocation);
-		NormalCursorPtr->SetActorHiddenInGame(!bCanTeleport || bCanMantle || bShouldCrouch);
+		NormalCursorPtr->SetActorHiddenInGame(bCanMantle || bShouldCrouch);
 	}
 
 	if (LedgeCursorPtr)
 	{
-		LedgeCursorPtr->SetActorRotation(LedgeCursor.Rotation);
-		LedgeCursorPtr->SetActorScale3D(LedgeCursor.Scale);
-
 		LedgeCursorPtr->SetActorLocation(CursorLocation);
-		LedgeCursorPtr->SetActorHiddenInGame(!bCanTeleport || !bCanMantle || bShouldCrouch);
+		LedgeCursorPtr->SetActorHiddenInGame(!bCanMantle || bShouldCrouch);
 	}
 
 	if (CrouchCursorPtr)
 	{
-		CrouchCursorPtr->SetActorRotation(CrouchCursor.Rotation);
-		CrouchCursorPtr->SetActorScale3D(CrouchCursor.Scale);
-
 		CrouchCursorPtr->SetActorLocation(CursorLocation);
-		CrouchCursorPtr->SetActorHiddenInGame(!bCanTeleport || bCanMantle || !bShouldCrouch);
+		CrouchCursorPtr->SetActorHiddenInGame(bCanMantle || !bShouldCrouch);
 	}
 
 	if (bDrawStats)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, -1, bCanTeleport ? FColor::Green : FColor::Red, FString("Teleport"));
-		GEngine->AddOnScreenDebugMessage(-1, -1, bCanMantle ? FColor::Green : FColor::Red, FString("Mantle"));
+		GEngine->AddOnScreenDebugMessage(-1, -1, bCanMantle ? FColor::Green : FColor::Red, FString("Into Mantle"));
+		GEngine->AddOnScreenDebugMessage(-1, -1, bShouldCrouch ? FColor::Green : FColor::Red, FString("Into Crouch"));
 	}
 }
 
 void UAb_Teleport::OnDeactivation()
 {
-	// Destroy the cursors, if they haven't been destroyed already
-	if (IsValid(NormalCursorPtr))
-	{
-		NormalCursorPtr->Destroy();
-	}
-
-	if (IsValid(LedgeCursorPtr))
-	{
-		LedgeCursorPtr->Destroy();
-	}
-
-	if (IsValid(CrouchCursorPtr))
-	{
-		CrouchCursorPtr->Destroy();
-	}
+	// Destroy the cursors
+	NormalCursorPtr->Destroy();
+	LedgeCursorPtr->Destroy();
+	CrouchCursorPtr->Destroy();
 }
 
-void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
+void UAb_Teleport::GetTeleportVariables()
 {
-	// Player not valid, early return
-	if (!_Player)
-	{
-		return;
-	}
-
 	// -- Set defaults --
 	{
-		TeleportLocation = _Player->GetActorLocation();
-		CursorLocation = TeleportLocation - FVector::UpVector * _Player->GetSimpleCollisionHalfHeight();
-		bCanTeleport = false;
 		bCanMantle = false;
 		bShouldCrouch = false;
 	}
 
-	const float PlayerHalfHeight = _Player->GetSimpleCollisionHalfHeight();
-	const float PlayerCrouchedHalfHeight = _Player->GetCharacterMovement()->CrouchedHalfHeight;
-	const float PlayerRadius = _Player->GetSimpleCollisionRadius();
+	const float PlayerHalfHeight = PlayerPtr->GetSimpleCollisionHalfHeight();
+	const float PlayerCrouchedHalfHeight = PlayerPtr->GetCharacterMovement()->CrouchedHalfHeight;
+	const float PlayerRadius = PlayerPtr->GetSimpleCollisionRadius();
 
 	bool bLocationsSet = false;
+	FVector FinalTpLocation = TeleportLocation;
 
 	FHitResult InitialTraceHit;
 
@@ -136,19 +108,19 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 		FVector TraceStart;
 		FRotator TraceDirection;
 
-		_Player->GetActorEyesViewPoint(TraceStart, TraceDirection);
+		PlayerPtr->GetActorEyesViewPoint(TraceStart, TraceDirection);
 
-		bool bInitialTraceResult = _Player->GetWorld()->LineTraceSingleByChannel
+		const bool bInitialTraceResult = PlayerPtr->GetWorld()->LineTraceSingleByChannel
 		(
 			InitialTraceHit,
 			TraceStart,
-			TraceStart + _Player->GetControlRotation().Vector() * TeleportRange,
-			ECollisionChannel::ECC_Visibility
+			TraceStart + PlayerPtr->GetControlRotation().Vector() * TeleportRange,
+			ECC_Visibility
 		);
 
 		if (!bInitialTraceResult) // no trace hit, tp location is mid-air
 		{
-			TeleportLocation = InitialTraceHit.TraceEnd + -TraceDirection.Vector() * PlayerRadius + FVector::UpVector * PlayerHalfHeight;
+			FinalTpLocation = InitialTraceHit.TraceEnd + -TraceDirection.Vector() * PlayerRadius + FVector::UpVector * PlayerHalfHeight;
 
 			bLocationsSet = true;
 		}
@@ -157,30 +129,23 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 	// -- Check for mantle on wall --
 	if (!bLocationsSet)
 	{
-		float Dot = FMath::Abs(FVector::DotProduct(FVector::UpVector, InitialTraceHit.ImpactNormal));
-		bool bIsWall = Dot <= WallDotTolerance;
+		const float Dot = FMath::Abs(FVector::DotProduct(FVector::UpVector, InitialTraceHit.ImpactNormal));
+		const bool bMantleAble = Dot <= WallDotTolerance;
 
 		TArray<FHitResult> HitResultArr;
 
-		FVector NormalUpVector = GetUpFromForward(InitialTraceHit.ImpactNormal);
+		const FVector NormalUpVector = GetUpFromForward(InitialTraceHit.ImpactNormal);
 
-		if (bIsWall)
+		if (bMantleAble)
 		{
-			float SphereTraceRadius = 10.f;
-			TArray<AActor*> IgnoredActors;
+			constexpr float SphereTraceRadius = 10.f;
 			
 			RecursiveSphereTrace
 			(
-				_Player,
 				InitialTraceHit.ImpactPoint,
 				InitialTraceHit.ImpactPoint,
 				InitialTraceHit.ImpactPoint + NormalUpVector * EdgeTolerance * 2.f,
 				SphereTraceRadius,
-				ECollisionChannel::ECC_Visibility,
-				false,
-				IgnoredActors,
-				EDrawDebugTrace::None,
-				true,
 				HitResultArr
 			);
 
@@ -188,65 +153,67 @@ void UAb_Teleport::GetTeleportVariables(APlayerCharacter* _Player)
 
 			if (bDrawMantle)
 			{
-				DrawDebugLine(_Player->GetWorld(), InitialTraceHit.ImpactPoint, InitialTraceHit.ImpactPoint + NormalUpVector * 100.f, MantleDirection, false, -1.f, 0, 3.f);
+				DrawDebugLine(PlayerPtr->GetWorld(), InitialTraceHit.ImpactPoint, InitialTraceHit.ImpactPoint + NormalUpVector * 100.f, MantleDirection, false, -1.f, 0, 3.f);
 
 				for (auto& Hit : HitResultArr)
 				{
-					DrawDebugSphere(_Player->GetWorld(), Hit.ImpactPoint, 10.f, 12, bCanMantle ? SphereTraceSucceed : SphereTraceFail);
+					DrawDebugSphere(PlayerPtr->GetWorld(), Hit.ImpactPoint, 10.f, 12, bCanMantle ? SphereTraceSucceed : SphereTraceFail);
 				}
 			}
 		}
 
 		constexpr float CmTolerance = 5.f;
-		const FVector PlayerExtents = _Player->GetSimpleCollisionCylinderExtent();
+		const FVector PlayerExtents = PlayerPtr->GetSimpleCollisionCylinderExtent();
 
 		if (bCanMantle)
 		{
-			TeleportLocation = HitResultArr.Last().ImpactPoint + FVector::UpVector * (PlayerHalfHeight + CmTolerance * 2.f);
+			FinalTpLocation = HitResultArr.Last().ImpactPoint + FVector::UpVector * (PlayerHalfHeight + CmTolerance * 2.f);
 		}
 		else
 		{
-			TeleportLocation = InitialTraceHit.ImpactPoint + InitialTraceHit.ImpactNormal * (PlayerExtents + FVector(CmTolerance));
+			FinalTpLocation = InitialTraceHit.ImpactPoint + InitialTraceHit.ImpactNormal * (PlayerExtents + FVector(CmTolerance));
 		}
 	}
 
-	FVector FinalTpLocation = TeleportLocation;
-
 	{
+		bool bCanTeleport;
 		FVector DepenetrationVector;
-		float StandCrouchHeightDiff = PlayerHalfHeight - PlayerCrouchedHalfHeight;
-
+		FVector TpLocationNoOffset = FinalTpLocation;
+		
 		// Check if there is room to teleport player standing up
-		bCanTeleport = FreeHeadRoom(_Player, TeleportLocation, PlayerHalfHeight, DepenetrationVector); // standing check #1
+		bCanTeleport = FreeHeadRoom(FinalTpLocation, PlayerHalfHeight, DepenetrationVector); // standing check #1
 
 		if (!bCanTeleport) // cant teleport standing in orig location, try with penetration offset
 		{
 			FinalTpLocation += DepenetrationVector;
-			bCanTeleport = FreeHeadRoom(_Player, FinalTpLocation, PlayerHalfHeight, DepenetrationVector); // standing check #2
+			bCanTeleport = FreeHeadRoom(FinalTpLocation, PlayerHalfHeight, DepenetrationVector); // standing check #2
 
-			if (!bCanTeleport && !_Player->bIsCrouched) // no standing room and not already crouched, check if the player can teleport crouching
+			if (!bCanTeleport && !PlayerPtr->bIsCrouched) // no standing room and not already crouched, check if the player can teleport crouching
 			{
-				FinalTpLocation = TeleportLocation - FVector::UpVector * StandCrouchHeightDiff;
-				bShouldCrouch = FreeHeadRoom(_Player, FinalTpLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #1
+				FinalTpLocation = TpLocationNoOffset - FVector::UpVector * (PlayerHalfHeight - PlayerCrouchedHalfHeight);
+				bShouldCrouch = FreeHeadRoom(FinalTpLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #1
 
 				if (!bShouldCrouch) // cant teleport crouching in orig location, try with penetration offset
 				{
 					FinalTpLocation += DepenetrationVector;
-					bShouldCrouch = FreeHeadRoom(_Player, FinalTpLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #2
+					bShouldCrouch = FreeHeadRoom(FinalTpLocation, PlayerCrouchedHalfHeight, DepenetrationVector); // crouch check #2
 				}
 
 				bCanTeleport = bShouldCrouch;
 			}
 		}
-	}
 
-	// Set cursor and teleport location
-	TeleportLocation = FinalTpLocation;
-	CursorLocation = TeleportLocation - FVector::UpVector * PlayerHalfHeight;
+		// Set cursor and teleport location, if the new location is valid
+        if (bCanTeleport)
+        {
+        	TeleportLocation = FinalTpLocation;
+        	CursorLocation = TeleportLocation - FVector::UpVector * PlayerHalfHeight;
+        }
+	}
 }
 
-void UAb_Teleport::RecursiveSphereTrace(const UObject* _WorldContextObject, const FVector _OrigStart, const FVector _Start, const FVector _End, float _Radius, ECollisionChannel _TraceChannel, 
-	bool _bTraceComplex, const TArray<AActor*>& _IgnoredActors, EDrawDebugTrace::Type _DrawDebugType, bool _bIgnoreSelf, TArray<FHitResult>& _OutHits, int _MaxIterations)
+void UAb_Teleport::RecursiveSphereTrace(const FVector _OrigStart, const FVector _Start, const FVector _End,
+		const float _Radius, TArray<FHitResult>& _OutHits, int _MaxIterations)
 {
 	if (_MaxIterations == 0) // if we have exceeded max iterations, early return
 	{
@@ -257,27 +224,28 @@ void UAb_Teleport::RecursiveSphereTrace(const UObject* _WorldContextObject, cons
 
 	// Perform single sphere trace
 	FHitResult Hit;
+	const TArray<AActor*> IgnoredActors;
 
 	UKismetSystemLibrary::SphereTraceSingle
 	(
-		_WorldContextObject,
+		PlayerPtr,
 		_Start,
 		_End,
 		_Radius,
-		UEngineTypes::ConvertToTraceType(_TraceChannel),
-		_bTraceComplex,
-		_IgnoredActors,
-		_DrawDebugType,
+		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility),
+		false,
+		IgnoredActors,
+		EDrawDebugTrace::None,
 		Hit,
-		_bIgnoreSelf
+		true
 	);
 
 	// if sphere trace succeeded, recurse the function
 	if (Hit.bBlockingHit)
 	{
-		_OutHits.Add(Hit); // ad the trace hit
+		_OutHits.Add(Hit);
 
-		if (Hit.ImpactPoint.Equals(_End)) // if the hit is exactly equal to trace end, early return (this will happen very rarely)
+		if (Hit.ImpactPoint.Equals(_End)) // (this will happen very rarely)
 		{
 			return;
 		}
@@ -292,32 +260,27 @@ void UAb_Teleport::RecursiveSphereTrace(const UObject* _WorldContextObject, cons
 			return;
 		}
 
-		RecursiveSphereTrace(_WorldContextObject, _OrigStart, Hit.ImpactPoint + Direction * _Radius * 2.f, _End, _Radius, _TraceChannel,
-			_bTraceComplex, _IgnoredActors, _DrawDebugType, _bIgnoreSelf, _OutHits, _MaxIterations);
+		// Re-call this function, with offset starting vector
+		RecursiveSphereTrace(_OrigStart, Hit.ImpactPoint + Direction * _Radius * 2.f, _End, _Radius, _OutHits, _MaxIterations);
 	}
 }
 
-bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector) const
+bool UAb_Teleport::FreeHeadRoom(FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector) const
 {
-	if (!_Player)
-	{
-		return false;
-	}
-
 	FHitResult Hit;
 
-	float PlayerRadius = _Player->GetSimpleCollisionRadius();
+	const float PlayerRadius = PlayerPtr->GetSimpleCollisionRadius();
 
 	FCollisionQueryParams QueryParams;
-	QueryParams.bFindInitialOverlaps = true; // life-saver
+	QueryParams.bFindInitialOverlaps = true; // life-saver, makes the depenetration vector work when trace starts penetrated
 
-	bool ObjectBlocking = _Player->GetWorld()->SweepSingleByChannel
+	const bool ObjectBlocking = PlayerPtr->GetWorld()->SweepSingleByChannel
 	(
 		Hit,
 		_PlayerCenterAtNewLocation,
 		_PlayerCenterAtNewLocation,
 		FQuat::Identity,
-		ECollisionChannel::ECC_Visibility,
+		ECC_Visibility,
 		FCollisionShape::MakeCapsule(FVector(PlayerRadius, PlayerRadius, _PlayerHalfHeightToCheck)),
 		QueryParams
 	);
@@ -326,7 +289,7 @@ bool UAb_Teleport::FreeHeadRoom(APlayerCharacter* _Player, FVector _PlayerCenter
 	{
 		DrawDebugCapsule
 		(
-			_Player->GetWorld(),
+			PlayerPtr->GetWorld(),
 			_PlayerCenterAtNewLocation,
 			_PlayerHalfHeightToCheck,
 			PlayerRadius,
