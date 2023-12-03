@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "BaseAbility.h"
-#include "Kismet/KismetSystemLibrary.h"
 #include "Ab_Teleport.generated.h"
 
 /**
@@ -24,33 +23,50 @@ public:
 private:
 	void GetTeleportVariables();
 
-	void RecursiveSphereTrace(const FVector _OrigStart, const FVector _Start, const FVector _End,
-		const float _Radius, TArray<FHitResult>& _OutHits, int _MaxIterations = 10);
+	// Returns true if the trace hit something
+	bool InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHit) const;
+	void MantleTrace(const FHitResult& _InitialTraceHit, FVector& _TeleportLocation);
 
-	bool FreeHeadRoom(FVector _PlayerCenterAtNewLocation, float _PlayerHalfHeightToCheck, FVector& _DepenetrationVector) const;
-
-	static FVector GetUpFromForward(FVector _Forward);
+	// Returns true when the player has sufficient head room at teleport location
+	bool CheckHeadRoom(FVector& _TeleportLocation);
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Teleport")
+	UPROPERTY(EditAnywhere, Category = "Teleport|Cursors")
 	TSubclassOf<AActor> NormalCursor;
 
-	UPROPERTY(EditAnywhere, Category = "Teleport")
+	UPROPERTY(EditAnywhere, Category = "Teleport|Cursors")
 	TSubclassOf<AActor> LedgeCursor;
 
-	UPROPERTY(EditAnywhere, Category = "Teleport")
+	UPROPERTY(EditAnywhere, Category = "Teleport|Cursors")
 	TSubclassOf<AActor> CrouchCursor;
 
-	UPROPERTY(EditAnywhere, Category = "Teleport")
+	// (cm)
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta=(ClampMin="100.0"))
 	float TeleportRange = 1000.f;
 
-	// How far away from a top edge to teleport on top of it
-	UPROPERTY(EditAnywhere, Category = "Teleport")
+	// How far away from a top edge (cm) to teleport on top of it
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta=(ClampMin="10.0"))
 	float EdgeTolerance = 50.f;
 
-	// How steep before a wall is not counted as a wall
+	// How steep before a wall is not counted as a wall, i.e. 0 => has to be exactly flat wall, 1 => the ground/ceiling counts as a wall
 	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float WallDotTolerance = 0.6f;
+
+	// The radius (cm) of the initial sphere trace
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.1"))
+	float InitialTraceRadius = 25.f;
+
+	// The radius (cm) of the mantle recursive sphere trace
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.1"))
+	float MantleTraceRadius = 10.f;
+
+	// The tolerance (cm) to offset the tp location by, when aiming at a wall / mantling
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.1"))
+	float WallTolerance = 5.f;
+
+	// The depenetration padding (cm) when running second pass of head-checks
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.1"))
+	float DepenetrationPadding = 2.5f;
 
 #pragma region Debugging
 
@@ -77,7 +93,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
 	FColor SphereTraceSucceed = FColor::Green;
-
 
 #pragma endregion
 
