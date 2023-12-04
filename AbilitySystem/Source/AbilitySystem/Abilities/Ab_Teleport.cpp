@@ -65,27 +65,28 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 	if (bIsSweeping)
 	{
 		SweepTowards();
-		return;
 	}
-	
-	GetTeleportVariables();
+	else
+	{
+		GetTeleportVariables();	
+	}
 	
 	if (NormalCursorPtr)
 	{
 		NormalCursorPtr->SetActorLocation(CursorLocation);
-		NormalCursorPtr->SetActorHiddenInGame(bCanMantle || bShouldCrouch);
+		NormalCursorPtr->SetActorHiddenInGame(bCanMantle || bShouldCrouch || bIsSweeping);
 	}
 
 	if (LedgeCursorPtr)
 	{
 		LedgeCursorPtr->SetActorLocation(CursorLocation);
-		LedgeCursorPtr->SetActorHiddenInGame(!bCanMantle || bShouldCrouch);
+		LedgeCursorPtr->SetActorHiddenInGame(!bCanMantle || bShouldCrouch || bIsSweeping);
 	}
 
 	if (CrouchCursorPtr)
 	{
 		CrouchCursorPtr->SetActorLocation(CursorLocation);
-		CrouchCursorPtr->SetActorHiddenInGame(bCanMantle || !bShouldCrouch);
+		CrouchCursorPtr->SetActorHiddenInGame(bCanMantle || !bShouldCrouch || bIsSweeping);
 	}
 }
 
