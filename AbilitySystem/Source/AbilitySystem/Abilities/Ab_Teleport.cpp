@@ -41,6 +41,7 @@ void UAb_Teleport::OnUse()
 	}
 
 	VelocityBeforeTp = PlayerPtr->GetVelocity();
+	PlayerPtr->GetCharacterMovement()->Velocity = FVector::ZeroVector;
 	
 	if (TeleportState == InstantKeepVelocity || TeleportState == InstantResetVelocity)
 	{
