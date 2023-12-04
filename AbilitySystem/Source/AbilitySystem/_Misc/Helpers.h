@@ -63,4 +63,6 @@ public:
 	// Gets the depenetration vector, if one exists, that will move the player out of collision
 	static bool CheckPlayerHeadRoom(const class APlayerCharacter* _PlayerPtr, const FVector _PlayerCenter, const EPlayerState _PlayerState,
 		FDebugHelper _DebugHelper, FVector& _DepenetrationVector, const float _DepenetrationPadding = 5.f, const ECollisionChannel _CollisionChannel = ECC_Visibility);
+
+	static FVector MoveTowards(FVector _Current, FVector _Target, float _MaxDistanceDelta);
 };

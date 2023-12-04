@@ -6,6 +6,15 @@
 #include "BaseAbility.h"
 #include "Ab_Teleport.generated.h"
 
+UENUM()
+enum ETeleportState
+{
+	InstantResetVelocity,
+	InstantKeepVelocity,
+	SweepResetVelocity,
+	SweepKeepVelocity
+};
+
 /**
  * 
  */
@@ -29,6 +38,8 @@ private:
 
 	// Returns true when the player has sufficient head room at teleport location
 	bool CheckHeadRoom(FVector& _TeleportLocation);
+
+	void SweepTowards();
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Teleport|Cursors")
@@ -67,6 +78,15 @@ private:
 	// The depenetration padding (cm) when running second pass of head-checks
 	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = "0.1"))
 	float DepenetrationPadding = 2.5f;
+
+	// The teleport state to use when player uses ability
+	UPROPERTY(EditAnywhere, Category = "Teleport")
+	TEnumAsByte<ETeleportState> TeleportState = InstantResetVelocity;
+
+	// The sweep size (cm), when moving towards the teleport location
+	UPROPERTY(EditAnywhere, Category = "Teleport", meta = (ClampMin = 5.f, EditConditionHides,
+		EditCondition = "TeleportState == ETeleportState::SweepResetVelocity || TeleportState == ETeleportState::SweepKeepVelocity"))
+	float SweepStepSize = 50.f;
 
 #pragma region Debugging
 	
@@ -113,5 +133,8 @@ private:
 	FVector CursorLocation;
 	bool bCanMantle;
 	bool bShouldCrouch;
+	bool bIsSweeping;
+
+	FVector VelocityBeforeTp = FVector::ZeroVector;
 	
 };

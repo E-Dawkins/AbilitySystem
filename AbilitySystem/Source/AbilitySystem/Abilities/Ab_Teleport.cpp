@@ -30,7 +30,7 @@ void UAb_Teleport::OnActivation(APlayerCharacter* _Player)
 
 void UAb_Teleport::OnUse()
 {
-	if (!PlayerPtr)
+	if (!PlayerPtr || bIsSweeping)
 	{
 		return;
 	}
@@ -39,14 +39,31 @@ void UAb_Teleport::OnUse()
 	{
 		PlayerPtr->Crouch();
 	}
+
+	VelocityBeforeTp = PlayerPtr->GetVelocity();
 	
-	PlayerPtr->SetActorLocation(TeleportLocation);
+	if (TeleportState == InstantKeepVelocity || TeleportState == InstantResetVelocity)
+	{
+		PlayerPtr->SetActorLocation(TeleportLocation);
+		PlayerPtr->GetCharacterMovement()->Velocity = VelocityBeforeTp.Size() * (TeleportState == InstantResetVelocity ? FVector::ZeroVector : PlayerPtr->GetControlRotation().Vector());
+	}
+	else if (TeleportState == SweepResetVelocity || TeleportState == SweepKeepVelocity)
+	{
+		bIsSweeping = true;
+		PlayerPtr->GetCharacterMovement()->GravityScale = 0;
+	}
 }
 
 void UAb_Teleport::Update(float _DeltaSeconds)
 {
 	if (!PlayerPtr)
 	{
+		return;
+	}
+
+	if (bIsSweeping)
+	{
+		SweepTowards();
 		return;
 	}
 	
@@ -219,4 +236,16 @@ bool UAb_Teleport::CheckHeadRoom(FVector& _TeleportLocation)
 	}
 
 	return bCanTeleport;
+}
+
+void UAb_Teleport::SweepTowards()
+{
+	PlayerPtr->SetActorLocation(FHelpers::MoveTowards(PlayerPtr->GetActorLocation(), TeleportLocation, SweepStepSize));
+	
+	if (PlayerPtr->GetActorLocation().Equals(TeleportLocation))
+	{
+		bIsSweeping = false;
+		PlayerPtr->GetCharacterMovement()->Velocity = VelocityBeforeTp.Size() * (TeleportState == SweepResetVelocity ? FVector::ZeroVector : PlayerPtr->GetControlRotation().Vector());
+		PlayerPtr->GetCharacterMovement()->GravityScale = 1;
+	}
 }

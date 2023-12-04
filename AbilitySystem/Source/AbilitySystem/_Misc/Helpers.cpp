@@ -119,3 +119,16 @@ bool FHelpers::CheckPlayerHeadRoom(const class APlayerCharacter* _PlayerPtr, con
 
 	return !ObjectBlocking;
 }
+
+FVector FHelpers::MoveTowards(FVector _Current, FVector _Target, float _MaxDistanceDelta)
+{
+	const FVector Direction = _Target - _Current;
+	const float Magnitude = Direction.Size();
+
+	if (Magnitude <= _MaxDistanceDelta || Magnitude == 0.f)
+	{
+		return _Target;
+	}
+
+	return _Current + Direction.GetSafeNormal() * _MaxDistanceDelta;
+}
