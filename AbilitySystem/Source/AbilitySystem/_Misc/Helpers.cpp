@@ -2,7 +2,9 @@
 
 
 #include "Helpers.h"
-#include <Kismet/KismetSystemLibrary.h>
+#include "DrawDebugHelpers.h"
+#include "../Player/PlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void FHelpers::GetLocalAxisFromForward(FVector _Forward, FVector& _Right, FVector& _Up)
 {
@@ -23,7 +25,7 @@ void FHelpers::GetLocalAxisFromUp(FVector _Up, FVector& _Forward, FVector& _Righ
 }
 
 void FHelpers::RecursiveSphereTrace(const UObject* _WorldContextObject, const FVector _OrigStart, const FVector _Start, const FVector _End,
-	const float _Radius, TArray<FHitResult>& _OutHits, int _MaxIterations, const FTraceHelper& _Helper)
+	const float _Radius, TArray<FHitResult>& _OutHits, int _MaxIterations, const FTraceHelper _Helper)
 {
 	if (_MaxIterations == 0) // if we have exceeded max iterations, early return
 	{
@@ -74,10 +76,9 @@ void FHelpers::RecursiveSphereTrace(const UObject* _WorldContextObject, const FV
 	}
 }
 
-bool FHelpers::CheckPlayerHeadRoom(const UWorld* _WorldPtr, float _PlayerRadius, FVector _PlayerCenter,
-	float _PlayerHalfHeight, FVector& _DepenetrationVector, float _DepenetrationPadding, ECollisionChannel CollisionChannel)
+bool FHelpers::CheckPlayerHeadRoom(const class APlayerCharacter* _PlayerPtr, const FVector _PlayerCenter, const EPlayerState _PlayerState, FDebugHelper _DebugHelper, FVector& _DepenetrationVector, const float _DepenetrationPadding, const ECollisionChannel _CollisionChannel)
 {
-	if (!_WorldPtr)
+	if (!_PlayerPtr)
 	{
 		return false;
 	}
@@ -87,18 +88,34 @@ bool FHelpers::CheckPlayerHeadRoom(const UWorld* _WorldPtr, float _PlayerRadius,
 	FCollisionQueryParams QueryParams;
 	QueryParams.bFindInitialOverlaps = true; // life-saver, makes the depenetration vector work when trace starts penetrated
 
-	const bool ObjectBlocking = _WorldPtr->SweepSingleByChannel
+	const float PlayerRadius = _PlayerPtr->GetSimpleCollisionRadius();
+	float PlayerHalfHeight = 0.f;
+
+	switch(_PlayerState)
+	{
+		case Standing: PlayerHalfHeight = _PlayerPtr->GetSimpleCollisionHalfHeight(); break;
+		case Crouched: PlayerHalfHeight = _PlayerPtr->GetCharacterMovement()->CrouchedHalfHeight; break;
+		default: PlayerHalfHeight = 0.f;
+	}
+	
+	const bool ObjectBlocking = _PlayerPtr->GetWorld()->SweepSingleByChannel
 	(
 		Hit,
 		_PlayerCenter,
 		_PlayerCenter,
 		FQuat::Identity,
-		CollisionChannel,
-		FCollisionShape::MakeCapsule(FVector(_PlayerRadius, _PlayerRadius, _PlayerHalfHeight)),
+		_CollisionChannel,
+		FCollisionShape::MakeCapsule(FVector(PlayerRadius, PlayerRadius, PlayerHalfHeight)),
 		QueryParams
 	);
 
 	_DepenetrationVector = Hit.Normal * (Hit.PenetrationDepth + _DepenetrationPadding);
+
+	if (_DebugHelper.bDebug)
+	{
+		DrawDebugCapsule(_PlayerPtr->GetWorld(), _PlayerCenter, PlayerHalfHeight, PlayerRadius, FQuat::Identity,
+			ObjectBlocking ? _DebugHelper.Color_Fail : _DebugHelper.Color_Success);
+	}
 
 	return !ObjectBlocking;
 }

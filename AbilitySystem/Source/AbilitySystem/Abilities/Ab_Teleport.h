@@ -25,7 +25,7 @@ private:
 
 	// Returns true if the trace hit something
 	bool InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHit) const;
-	void MantleTrace(const FHitResult& _InitialTraceHit, FVector& _TeleportLocation);
+	void MantleTrace(const FHitResult _InitialTraceHit, FVector& _TeleportLocation);
 
 	// Returns true when the player has sufficient head room at teleport location
 	bool CheckHeadRoom(FVector& _TeleportLocation);
@@ -69,10 +69,13 @@ private:
 	float DepenetrationPadding = 2.5f;
 
 #pragma region Debugging
-
+	
 	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging")
 	bool bDrawStats = false;
 
+	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging")
+	bool bDrawInitialTraceHit = false;
+	
 	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging")
 	bool bDrawHeadRoom = false;
 
@@ -86,13 +89,13 @@ private:
 	bool bDrawMantle = false;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
-	FColor MantleDirection = FColor::Purple;
+	FColor MantleLocalUp = FColor::Purple;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
-	FColor SphereTraceFail = FColor::Red;
+	FColor MantleTraceFail = FColor::Red;
 
 	UPROPERTY(EditAnywhere, Category = "Teleport|Debugging", meta = (EditCondition = "bDrawMantle", EditConditionHides))
-	FColor SphereTraceSucceed = FColor::Green;
+	FColor MantleTraceSucceed = FColor::Green;
 
 #pragma endregion
 

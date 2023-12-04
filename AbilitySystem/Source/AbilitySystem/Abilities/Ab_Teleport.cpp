@@ -92,8 +92,6 @@ void UAb_Teleport::GetTeleportVariables()
 	{
 		MantleTrace(InitialTraceHit, FinalTpLocation);
 	}
-
-	GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Tp Location Before: %s"), *FinalTpLocation.ToString()));
 	
 	if (CheckHeadRoom(FinalTpLocation))
 	{
@@ -101,7 +99,11 @@ void UAb_Teleport::GetTeleportVariables()
 		CursorLocation = TeleportLocation - FVector::UpVector * PlayerPtr->GetSimpleCollisionHalfHeight();
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Tp Location After: %s"), *FinalTpLocation.ToString()));
+	if (bDrawStats)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, -1, bCanMantle ? FColor::Green : FColor::Red, FString("Can Mantle"));
+		GEngine->AddOnScreenDebugMessage(-1, -1, bShouldCrouch ? FColor::Green : FColor::Red, FString("Should Crouch"));
+	}
 }
 
 bool UAb_Teleport::InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHit) const
@@ -125,11 +127,16 @@ bool UAb_Teleport::InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHi
 		_TeleportLocation = _TraceHit.TraceEnd - TraceDirection.Vector() * PlayerPtr->GetSimpleCollisionRadius()
 								+ FVector::UpVector * PlayerPtr->GetSimpleCollisionHalfHeight();
 	}
+
+	if (bDrawInitialTraceHit)
+	{
+		DrawDebugSphere(PlayerPtr->GetWorld(), bInitialTraceResult ? _TraceHit.ImpactPoint : _TraceHit.TraceEnd, 10.f, 12, FColor::Black);
+	}
 	
 	return bInitialTraceResult;
 }
 
-void UAb_Teleport::MantleTrace(const FHitResult& _InitialTraceHit, FVector& _TeleportLocation)
+void UAb_Teleport::MantleTrace(const FHitResult _InitialTraceHit, FVector& _TeleportLocation)
 {
 	const bool bMantleAble = FMath::Abs(FVector::DotProduct(FVector::UpVector, _InitialTraceHit.ImpactNormal)) <= WallDotTolerance;
 
@@ -163,37 +170,48 @@ void UAb_Teleport::MantleTrace(const FHitResult& _InitialTraceHit, FVector& _Tel
 		const FVector ExtentPlusTolerance = PlayerPtr->GetSimpleCollisionCylinderExtent() + FVector(WallTolerance);
 		_TeleportLocation = _InitialTraceHit.ImpactPoint + _InitialTraceHit.ImpactNormal * ExtentPlusTolerance;
 	}
+
+	if (bDrawMantle && HitResultArr.Num() > 0)
+	{
+		DrawDebugLine(PlayerPtr->GetWorld(), _InitialTraceHit.ImpactPoint, HitResultArr.Last().ImpactPoint, MantleLocalUp);
+
+		for (FHitResult& Hit : HitResultArr)
+		{
+			DrawDebugSphere(PlayerPtr->GetWorld(), Hit.ImpactPoint, MantleTraceRadius, 12, bCanMantle ? MantleTraceSucceed : MantleTraceFail);
+		}
+	}
 }
 
 bool UAb_Teleport::CheckHeadRoom(FVector& _TeleportLocation)
 {
 	FVector DepenetrationVector;
 	const FVector TpLocationNoOffset = _TeleportLocation;
-
-	const float PlayerRadius = PlayerPtr->GetSimpleCollisionRadius();
+	
 	const float PlayerHalfHeight = PlayerPtr->GetSimpleCollisionHalfHeight();
 	const float PlayerCrouchedHalfHeight = PlayerPtr->GetCharacterMovement()->CrouchedHalfHeight;
+
+	const FDebugHelper DebugHelper = {bDrawHeadRoom, HeadRoomSucceed, HeadRoomFail};
 	
-	bool bCanTeleport = FHelpers::CheckPlayerHeadRoom(PlayerPtr->GetWorld(), PlayerRadius, _TeleportLocation,
-		PlayerHalfHeight, DepenetrationVector, DepenetrationPadding); // standing check #1
+	bool bCanTeleport = FHelpers::CheckPlayerHeadRoom(PlayerPtr, _TeleportLocation,
+		Standing, DebugHelper, DepenetrationVector, DepenetrationPadding); // standing check #1
 	
 	if (!bCanTeleport)
 	{
 		_TeleportLocation += DepenetrationVector;
-		bCanTeleport = FHelpers::CheckPlayerHeadRoom(PlayerPtr->GetWorld(), PlayerRadius, _TeleportLocation,
-			PlayerHalfHeight, DepenetrationVector, DepenetrationPadding); // standing check #2
+		bCanTeleport = FHelpers::CheckPlayerHeadRoom(PlayerPtr, _TeleportLocation,
+			Standing, DebugHelper, DepenetrationVector, DepenetrationPadding); // standing check #2
 
 		if (!bCanTeleport && !PlayerPtr->bIsCrouched)
 		{
 			_TeleportLocation = TpLocationNoOffset - FVector::UpVector * (PlayerHalfHeight - PlayerCrouchedHalfHeight);
-			bShouldCrouch = FHelpers::CheckPlayerHeadRoom(PlayerPtr->GetWorld(), PlayerRadius, _TeleportLocation,
-				PlayerCrouchedHalfHeight, DepenetrationVector, DepenetrationPadding); // crouch check #1
+			bShouldCrouch = FHelpers::CheckPlayerHeadRoom(PlayerPtr, _TeleportLocation,
+				Crouched, DebugHelper, DepenetrationVector, DepenetrationPadding); // crouch check #1
 
 			if (!bShouldCrouch)
 			{
 				_TeleportLocation += DepenetrationVector;
-				bShouldCrouch = FHelpers::CheckPlayerHeadRoom(PlayerPtr->GetWorld(), PlayerRadius, _TeleportLocation,
-					PlayerCrouchedHalfHeight, DepenetrationVector, DepenetrationPadding); // crouch check #2
+				bShouldCrouch = FHelpers::CheckPlayerHeadRoom(PlayerPtr, _TeleportLocation,
+					Crouched, DebugHelper, DepenetrationVector, DepenetrationPadding); // crouch check #2
 			}
 
 			bCanTeleport = bShouldCrouch;
