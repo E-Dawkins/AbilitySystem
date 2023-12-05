@@ -20,17 +20,23 @@ class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 
 private:
 	void ToggleTimeBend();
+	void StartTimeBend(FVector _Velocity) const;
+	void GetActorsCloseToPlayer();
 	
 private:
-	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0001", ClampMax = "1.0"))
 	float GlobalDilation = 0.3f;
 	
-	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0001", ClampMax = "1.0"))
 	float PlayerDilation = 1.f;
 
 	// (seconds)
 	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.1"))
-	float BendTimeLength = 1.f;
+	float BendTimeLength = 3.f;
+
+	// If the global dilation is <= than this, treat it as time being "stopped"
+	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0"))
+	float TimeStopThreshold = 0.1f;
 
 	UPROPERTY(EditAnywhere, Category = "BendTime|Debugging")
 	bool bDrawTimeRemaining = false;
@@ -40,7 +46,9 @@ private:
 	float StoredPlayerDilation = 1.f;
 
 	bool bIsBendingTime = false;
-
-	FTimerHandle BendTimeHandle = FTimerHandle();
+	
+	FDateTime TimerStart = FDateTime::Now();
+	
+	TMap<AActor*, FVector> ActorsCloseToPlayer;
 	
 };
