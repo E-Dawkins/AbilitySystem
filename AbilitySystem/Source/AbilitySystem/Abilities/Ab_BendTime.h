@@ -2,9 +2,17 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "BaseAbility.h"
 #include "Ab_BendTime.generated.h"
+
+USTRUCT()
+struct FFrozenActorData
+{
+	GENERATED_BODY()
+
+	FBodyInstance BodyInstance;
+	FVector Velocity;
+};
 
 /**
  * 
@@ -14,9 +22,9 @@ class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 {
 	GENERATED_BODY()
 
-	virtual void OnActivation(APlayerCharacter* _Player) override;
-	virtual void OnUse() override;
-	virtual void Update(float _DeltaSeconds) override;
+	void OnActivation(APlayerCharacter* _Player) override;
+	void OnUse() override;
+	void Update(float _DeltaSeconds) override;
 
 private:
 	void ToggleTimeBend();
@@ -49,6 +57,6 @@ private:
 	
 	FDateTime TimerStart = FDateTime::Now();
 	
-	TMap<AActor*, FVector> ActorsCloseToPlayer;
+	TMap<AActor*, FFrozenActorData> ActorsCloseToPlayer;
 	
 };

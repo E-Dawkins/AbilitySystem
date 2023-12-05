@@ -113,12 +113,23 @@ void UAb_BendTime::GetActorsCloseToPlayer()
 			}
 		}
 
-		// Store actor + its' velocity, and turn off the actors' simulate physics
+		// Store actor + its' data, and stop simulating physics on that actor
 		for (AActor*& Actor : SimulatingActors)
 		{
-			FVector Velocity = Cast<UPrimitiveComponent>(Actor->GetRootComponent())->GetPhysicsLinearVelocity();
-			Cast<UPrimitiveComponent>(Actor->GetRootComponent())->SetSimulatePhysics(false);
-			ActorsCloseToPlayer.Add(Actor, Velocity);
+			if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+			{
+				const FBodyInstance BodyInstance = PrimComp->BodyInstance;
+				const FVector Velocity = BodyInstance.GetUnrealWorldVelocity();
+				ActorsCloseToPlayer.Add(Actor, FFrozenActorData{BodyInstance, Velocity});
+			
+				PrimComp->SetSimulatePhysics(false);
+				PrimComp->BodyInstance.bLockXTranslation = true;
+				PrimComp->BodyInstance.bLockYTranslation = true;
+				PrimComp->BodyInstance.bLockZTranslation = true;
+				PrimComp->BodyInstance.bLockXRotation = true;
+				PrimComp->BodyInstance.bLockYRotation = true;
+				PrimComp->BodyInstance.bLockZRotation = true;
+			}
 		}
 	}
 
@@ -131,8 +142,12 @@ void UAb_BendTime::GetActorsCloseToPlayer()
 		{
 			if (!SimulatingActors.Contains(Keys[i]))
 			{
-				Cast<UPrimitiveComponent>(Keys[i]->GetRootComponent())->SetSimulatePhysics(true);
-				Cast<UPrimitiveComponent>(Keys[i]->GetRootComponent())->SetAllPhysicsLinearVelocity(ActorsCloseToPlayer[Keys[i]]);
+				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Keys[i]->GetRootComponent()))
+				{
+					PrimComp->SetSimulatePhysics(true);
+					PrimComp->BodyInstance = ActorsCloseToPlayer[Keys[i]].BodyInstance;
+					PrimComp->BodyInstance.SetLinearVelocity(ActorsCloseToPlayer[Keys[i]].Velocity, false);
+				}
 				
 				ActorsCloseToPlayer.Remove(Keys[i]);
 				Keys.RemoveAt(i);
