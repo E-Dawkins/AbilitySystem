@@ -10,8 +10,11 @@ void UAb_BendTime::OnActivation(APlayerCharacter* _Player)
 {
 	Super::OnActivation(_Player);
 
-	StoredGlobalDilation = UGameplayStatics::GetGlobalTimeDilation(PlayerPtr);
-	StoredPlayerDilation = PlayerPtr->CustomTimeDilation;
+	if (StoredGlobalDilation < 0.f)
+	{
+		StoredGlobalDilation = UGameplayStatics::GetGlobalTimeDilation(PlayerPtr);
+		StoredPlayerDilation = PlayerPtr->CustomTimeDilation;
+	}
 }
 
 void UAb_BendTime::OnUse()
@@ -49,16 +52,26 @@ void UAb_BendTime::Update(float _DeltaSeconds)
 	}
 }
 
+void UAb_BendTime::OnDeactivation()
+{
+	Super::OnDeactivation();
+
+	UGameplayStatics::SetGlobalTimeDilation(PlayerPtr, StoredGlobalDilation);
+	PlayerPtr->CustomTimeDilation = StoredPlayerDilation;
+
+	GetActorsCloseToPlayer();
+
+	StoredGlobalDilation = -1.f;
+	StoredPlayerDilation = -1.f;
+}
+
 void UAb_BendTime::ToggleTimeBend()
 {
 	bIsBendingTime = !bIsBendingTime;
 	
 	if (!bIsBendingTime) // bend end
 	{
-		UGameplayStatics::SetGlobalTimeDilation(PlayerPtr, StoredGlobalDilation);
-		PlayerPtr->CustomTimeDilation = StoredPlayerDilation;
-
-		GetActorsCloseToPlayer();
+		OnDeactivation();
 	}
 	else // bend start
 	{

@@ -25,6 +25,7 @@ class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 	virtual void OnActivation(APlayerCharacter* _Player) override;
 	virtual void OnUse() override;
 	virtual void Update(float _DeltaSeconds) override;
+	virtual void OnDeactivation() override;
 
 private:
 	void ToggleTimeBend();
@@ -50,8 +51,8 @@ private:
 	bool bDrawTimeRemaining = false;
 	
 private:
-	float StoredGlobalDilation = 1.f;
-	float StoredPlayerDilation = 1.f;
+	float StoredGlobalDilation = -1.f;
+	float StoredPlayerDilation = -1.f;
 
 	bool bIsBendingTime = false;
 	

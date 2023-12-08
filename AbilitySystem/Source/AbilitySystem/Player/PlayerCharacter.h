@@ -27,20 +27,12 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	UFUNCTION()
 	void MoveForward(float _Value);
-
-	UFUNCTION()
 	void MoveRight(float _Value);
-
-	UFUNCTION()
 	void ToggleCrouch();
-
-	UFUNCTION()
 	void ToggleSprint();
-
-	UFUNCTION()
 	void OnAbilityUsed();
+	void OnAbilityActivated();
 
 private:
 	// In cm/s

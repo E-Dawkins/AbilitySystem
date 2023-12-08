@@ -25,15 +25,22 @@ void UAb_Teleport::OnActivation(APlayerCharacter* _Player)
 		NormalCursorPtr = World->SpawnActor(NormalCursor);
 		LedgeCursorPtr = World->SpawnActor(LedgeCursor);
 		CrouchCursorPtr = World->SpawnActor(CrouchCursor);
+
+		NormalCursorPtr->SetActorHiddenInGame(true);
+		LedgeCursorPtr->SetActorHiddenInGame(true);
+		CrouchCursorPtr->SetActorHiddenInGame(true);
 	}
 }
 
 void UAb_Teleport::OnUse()
 {
-	if (!PlayerPtr || bIsSweeping)
+	if (!PlayerPtr)
 	{
 		return;
 	}
+
+	// Disable player input temporarily
+	PlayerPtr->DisableInput(PlayerPtr->GetController<APlayerController>());
 	
 	if (bShouldCrouch)
 	{
@@ -47,6 +54,8 @@ void UAb_Teleport::OnUse()
 	{
 		PlayerPtr->SetActorLocation(TeleportLocation);
 		PlayerPtr->GetCharacterMovement()->Velocity = VelocityBeforeTp.Size() * (TeleportState == InstantResetVelocity ? FVector::ZeroVector : PlayerPtr->GetControlRotation().Vector());
+
+		OnDeactivation();
 	}
 	else if (TeleportState == SweepResetVelocity || TeleportState == SweepKeepVelocity)
 	{
@@ -68,7 +77,7 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 	}
 	else
 	{
-		GetTeleportVariables();	
+		GetTeleportVariables();
 	}
 	
 	if (NormalCursorPtr)
@@ -92,9 +101,14 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 
 void UAb_Teleport::OnDeactivation()
 {
+	Super::OnDeactivation();
+	
 	NormalCursorPtr->Destroy();
 	LedgeCursorPtr->Destroy();
 	CrouchCursorPtr->Destroy();
+
+	// Re-enable player input
+	PlayerPtr->EnableInput(PlayerPtr->GetController<APlayerController>());
 }
 
 void UAb_Teleport::GetTeleportVariables()
@@ -244,10 +258,12 @@ void UAb_Teleport::SweepTowards()
 {
 	PlayerPtr->SetActorLocation(FHelpers::MoveTowards(PlayerPtr->GetActorLocation(), TeleportLocation, SweepStepSize));
 	
-	if (PlayerPtr->GetActorLocation().Equals(TeleportLocation))
+	if (PlayerPtr->GetActorLocation().Equals(TeleportLocation)) // reached tp location
 	{
 		bIsSweeping = false;
 		PlayerPtr->GetCharacterMovement()->Velocity = VelocityBeforeTp.Size() * (TeleportState == SweepResetVelocity ? FVector::ZeroVector : PlayerPtr->GetControlRotation().Vector());
 		PlayerPtr->GetCharacterMovement()->GravityScale = 1;
+
+		OnDeactivation();
 	}
 }

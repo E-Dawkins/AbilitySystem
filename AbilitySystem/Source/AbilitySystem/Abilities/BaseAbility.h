@@ -26,8 +26,12 @@ public:
 
 	virtual void OnDeactivation();
 
+public:
+	bool GetActiveState() const { return bAbilityActive; }
+
 protected:
 	UPROPERTY()
 	APlayerCharacter* PlayerPtr;
+	bool bAbilityActive = false;
 	
 };
