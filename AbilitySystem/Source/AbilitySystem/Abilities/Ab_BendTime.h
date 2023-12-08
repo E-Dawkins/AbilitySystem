@@ -22,9 +22,9 @@ class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 {
 	GENERATED_BODY()
 
-	void OnActivation(APlayerCharacter* _Player) override;
-	void OnUse() override;
-	void Update(float _DeltaSeconds) override;
+	virtual void OnActivation(APlayerCharacter* _Player) override;
+	virtual void OnUse() override;
+	virtual void Update(float _DeltaSeconds) override;
 
 private:
 	void ToggleTimeBend();
@@ -56,7 +56,8 @@ private:
 	bool bIsBendingTime = false;
 	
 	FDateTime TimerStart = FDateTime::Now();
-	
+
+	UPROPERTY()
 	TMap<AActor*, FFrozenActorData> ActorsCloseToPlayer;
 	
 };
