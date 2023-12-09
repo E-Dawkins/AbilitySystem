@@ -10,11 +10,23 @@ void UAb_BendTime::OnActivation(APlayerCharacter* _Player)
 {
 	Super::OnActivation(_Player);
 
+	if (!PlayerPtr)
+	{
+		return;
+	}
+
 	if (StoredGlobalDilation < 0.f)
 	{
 		StoredGlobalDilation = UGameplayStatics::GetGlobalTimeDilation(PlayerPtr);
 		StoredPlayerDilation = PlayerPtr->CustomTimeDilation;
 	}
+
+	Timeline.SetTimelineLengthMode(TL_TimelineLength);
+	Timeline.SetTimelineLength(BendTimeLength);
+		
+	FOnTimelineEvent TimelineFinish;
+	TimelineFinish.BindDynamic(this, &UAb_BendTime::ToggleTimeBend);
+	Timeline.SetTimelineFinishedFunc(TimelineFinish);
 }
 
 void UAb_BendTime::OnUse()
@@ -27,35 +39,15 @@ void UAb_BendTime::OnUse()
 	ToggleTimeBend();
 }
 
-void UAb_BendTime::Update(float _DeltaSeconds)
-{
-	if (bIsBendingTime)
-	{
-		GetActorsCloseToPlayer();
-		
-		if ((FDateTime::Now() - TimerStart).GetTotalSeconds() >= BendTimeLength)
-		{
-			ToggleTimeBend();
-		}
-	}
-	
-	if (bDrawTimeRemaining)
-	{
-		if (bIsBendingTime)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Bend Time Remaining: %f"), BendTimeLength - (FDateTime::Now() - TimerStart).GetTotalSeconds()));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, FString::Printf(TEXT("Bend Time Not Active")));
-		}
-	}
-}
-
 void UAb_BendTime::OnDeactivation()
 {
 	Super::OnDeactivation();
 
+	if (!PlayerPtr)
+	{
+		return;
+	}
+	
 	UGameplayStatics::SetGlobalTimeDilation(PlayerPtr, StoredGlobalDilation);
 	PlayerPtr->CustomTimeDilation = StoredPlayerDilation;
 
@@ -63,6 +55,9 @@ void UAb_BendTime::OnDeactivation()
 
 	StoredGlobalDilation = -1.f;
 	StoredPlayerDilation = -1.f;
+	bIsBendingTime = false;
+
+	Timeline.Stop();
 }
 
 void UAb_BendTime::ToggleTimeBend()
@@ -82,16 +77,18 @@ void UAb_BendTime::ToggleTimeBend()
 
 		const FTimerDelegate EndDelegate = FTimerDelegate::CreateUObject(this, &UAb_BendTime::StartTimeBend, PlayerVelocity);
 		PlayerPtr->GetWorld()->GetTimerManager().SetTimerForNextTick(EndDelegate);
-		
-		TimerStart = FDateTime::Now();
 	}
 }
 
-void UAb_BendTime::StartTimeBend(FVector _Velocity) const
+void UAb_BendTime::StartTimeBend(FVector _Velocity)
 {
 	PlayerPtr->CustomTimeDilation = (1.f / GlobalDilation) * PlayerDilation;
 	PlayerPtr->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	PlayerPtr->GetCharacterMovement()->Velocity = _Velocity;
+
+	Timeline.PlayFromStart();
+	TimerStart = FDateTime::Now();
+	TickTimeline();
 }
 
 void UAb_BendTime::GetActorsCloseToPlayer()
@@ -153,7 +150,7 @@ void UAb_BendTime::GetActorsCloseToPlayer()
 	
 		for (int i = ActorsCloseToPlayer.Num() - 1; i >= 0; i--)
 		{
-			if (!SimulatingActors.Contains(Keys[i]))
+			if (!SimulatingActors.Contains(Keys[i]) && IsValid(Keys[i]))
 			{
 				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Keys[i]->GetRootComponent()))
 				{
@@ -166,5 +163,37 @@ void UAb_BendTime::GetActorsCloseToPlayer()
 				Keys.RemoveAt(i);
 			}
 		}
+	}
+}
+
+void UAb_BendTime::TickTimeline()
+{
+	if (TimerStart != FDateTime::Now())
+	{
+		Timeline.TickTimeline((FDateTime::Now() - TimerStart).GetTotalSeconds());
+	}
+	
+	if (bIsBendingTime)
+	{
+		GetActorsCloseToPlayer();
+	}
+	
+	if (bDrawTimeRemaining)
+	{
+		if (bIsBendingTime)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Bend Time Remaining: %f"), BendTimeLength - Timeline.GetPlaybackPosition()));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, FString::Printf(TEXT("Bend Time Not Active")));
+		}
+	}
+
+	TimerStart = FDateTime::Now();
+	
+	if (Timeline.IsPlaying())
+	{
+		PlayerPtr->GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UAb_BendTime::TickTimeline);
 	}
 }

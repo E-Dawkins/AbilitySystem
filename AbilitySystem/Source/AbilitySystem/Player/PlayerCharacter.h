@@ -6,25 +6,24 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class UBaseAbility;
+class UWeaponWheel;
+
 UCLASS(hideCategories = (Replication, Rendering, Actor, LOD, Cooking, ActorTick))
 class ABILITYSYSTEM_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	APlayerCharacter();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 	void MoveForward(float _Value);
@@ -33,23 +32,32 @@ private:
 	void ToggleSprint();
 	void OnAbilityUsed();
 	void OnAbilityActivated();
+	void OpenWeaponWheel();
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentAbility(TSubclassOf<UBaseAbility> _NewAbility) { CurrentAbility = _NewAbility; }
 
 private:
-	// In cm/s
-	UPROPERTY(EditAnywhere, Category = "Character")
+	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
 	float MaxWalkSpeed = 600.f;
-
-	// In cm/s
-	UPROPERTY(EditAnywhere, Category = "Character")
+	
+	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
 	float MaxSprintSpeed = 1000.f;
-
-	// In cm/s
-	UPROPERTY(EditAnywhere, Category = "Character")
+	
+	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
 	float MaxCrouchSpeed = 300.f;
 
 	UPROPERTY(EditAnywhere, Category = "Character")
-	TSubclassOf<class UBaseAbility> CurrentAbility;
+	TSubclassOf<UBaseAbility> CurrentAbility;
 
+	UPROPERTY(EditAnywhere, Category = "Character")
+	TSubclassOf<UWeaponWheel> WeaponWheelClass;
+
+private:
 	bool bIsSprinting = false;
+
+	UPROPERTY()
+	UWeaponWheel* WeaponWheelPtr = nullptr;
 
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "BaseAbility.h"
+#include "Components/TimelineComponent.h"
 #include "Ab_BendTime.generated.h"
 
 USTRUCT()
@@ -24,13 +25,14 @@ class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 
 	virtual void OnActivation(APlayerCharacter* _Player) override;
 	virtual void OnUse() override;
-	virtual void Update(float _DeltaSeconds) override;
 	virtual void OnDeactivation() override;
-
+	
 private:
+	UFUNCTION()
 	void ToggleTimeBend();
-	void StartTimeBend(FVector _Velocity) const;
+	void StartTimeBend(FVector _Velocity);
 	void GetActorsCloseToPlayer();
+	void TickTimeline();
 	
 private:
 	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0001", ClampMax = "1.0"))
@@ -55,10 +57,11 @@ private:
 	float StoredPlayerDilation = -1.f;
 
 	bool bIsBendingTime = false;
-	
-	FDateTime TimerStart = FDateTime::Now();
 
 	UPROPERTY()
 	TMap<AActor*, FFrozenActorData> ActorsCloseToPlayer;
+
+	FTimeline Timeline;
+	FDateTime TimerStart = FDateTime::Now();
 	
 };

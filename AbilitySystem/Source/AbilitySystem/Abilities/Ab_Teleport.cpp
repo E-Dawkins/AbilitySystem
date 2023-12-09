@@ -107,8 +107,11 @@ void UAb_Teleport::OnDeactivation()
 	LedgeCursorPtr->Destroy();
 	CrouchCursorPtr->Destroy();
 
-	// Re-enable player input
-	PlayerPtr->EnableInput(PlayerPtr->GetController<APlayerController>());
+	if (PlayerPtr)
+	{
+		// Re-enable player input
+		PlayerPtr->EnableInput(PlayerPtr->GetController<APlayerController>());
+	}
 }
 
 void UAb_Teleport::GetTeleportVariables()
