@@ -6,15 +6,6 @@
 #include "Components/TimelineComponent.h"
 #include "Ab_BendTime.generated.h"
 
-USTRUCT()
-struct FFrozenActorData
-{
-	GENERATED_BODY()
-
-	FBodyInstance BodyInstance;
-	FVector Velocity;
-};
-
 /**
  * 
  */
@@ -28,6 +19,9 @@ class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 	virtual void OnDeactivation() override;
 	
 private:
+	void Setup();
+	void Reset();
+	
 	UFUNCTION()
 	void ToggleTimeBend();
 	void StartTimeBend(FVector _Velocity);
@@ -64,7 +58,7 @@ private:
 	bool bIsBendingTime = false;
 
 	UPROPERTY()
-	TMap<AActor*, FFrozenActorData> ActorsCloseToPlayer;
+	TMap<AActor*, FVector> ActorsCloseToPlayer;
 
 	FTimeline Timeline;
 	FDateTime TimerStart = FDateTime::Now();

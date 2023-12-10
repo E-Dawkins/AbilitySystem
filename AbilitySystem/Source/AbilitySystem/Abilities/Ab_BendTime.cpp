@@ -2,8 +2,8 @@
 
 
 #include "Ab_BendTime.h"
-#include <Kismet/GameplayStatics.h>
-
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void UAb_BendTime::OnActivation(APlayerCharacter* _Player)
@@ -15,18 +15,7 @@ void UAb_BendTime::OnActivation(APlayerCharacter* _Player)
 		return;
 	}
 
-	if (StoredGlobalDilation < 0.f)
-	{
-		StoredGlobalDilation = UGameplayStatics::GetGlobalTimeDilation(PlayerPtr);
-		StoredPlayerDilation = PlayerPtr->CustomTimeDilation;
-	}
-
-	Timeline.SetTimelineLengthMode(TL_TimelineLength);
-	Timeline.SetTimelineLength(BendTimeLength);
-		
-	FOnTimelineEvent TimelineFinish;
-	TimelineFinish.BindDynamic(this, &UAb_BendTime::ToggleTimeBend);
-	Timeline.SetTimelineFinishedFunc(TimelineFinish);
+	Setup();
 }
 
 void UAb_BendTime::OnUse()
@@ -50,6 +39,27 @@ void UAb_BendTime::OnDeactivation()
 		return;
 	}
 	
+	Reset();
+}
+
+void UAb_BendTime::Setup()
+{
+	if (StoredGlobalDilation < 0.f)
+	{
+		StoredGlobalDilation = UGameplayStatics::GetGlobalTimeDilation(PlayerPtr);
+		StoredPlayerDilation = PlayerPtr->CustomTimeDilation;
+	}
+
+	Timeline.SetTimelineLengthMode(TL_TimelineLength);
+	Timeline.SetTimelineLength(BendTimeLength);
+		
+	FOnTimelineEvent TimelineFinish;
+	TimelineFinish.BindDynamic(this, &UAb_BendTime::ToggleTimeBend);
+	Timeline.SetTimelineFinishedFunc(TimelineFinish);
+}
+
+void UAb_BendTime::Reset()
+{
 	UGameplayStatics::SetGlobalTimeDilation(PlayerPtr, StoredGlobalDilation);
 	PlayerPtr->CustomTimeDilation = StoredPlayerDilation;
 
@@ -99,100 +109,61 @@ void UAb_BendTime::GetActorsCloseToPlayer()
 	{
 		return;
 	}
-	
-	TArray<AActor*> SimulatingActors;
+
+	const TArray<AActor*> IgnoredActors = {PlayerPtr};
 	
 	if (bIsBendingTime)
 	{
-		TArray<FHitResult> OutHits;
+		TArray<AActor*> SimulatingActors;
+		UKismetSystemLibrary::SphereOverlapActors(PlayerPtr, PlayerPtr->GetActorLocation(), SimulatingActorsRadius, {}, AActor::StaticClass(), IgnoredActors, SimulatingActors);
 		
-		PlayerPtr->GetWorld()->SweepMultiByChannel
-	   (
-		   OutHits,
-		   PlayerPtr->GetActorLocation(),
-		   PlayerPtr->GetActorLocation(),
-		   FQuat::Identity,
-		   ECC_WorldDynamic,
-		   FCollisionShape::MakeSphere(SimulatingActorsRadius)
-	   );
-
-		// Filter out the simulating actors
-		for (const FHitResult& Hit : OutHits)
+		// Store simulating actor + its' velocity, and turn off physics simulation for that actor
+		for (int i = 0; i < SimulatingActors.Num(); i++)
 		{
-			if (Hit.GetActor()->GetRootComponent()->IsSimulatingPhysics())
+			if (SimulatingActors[i]->GetRootComponent()->IsSimulatingPhysics())
 			{
-				SimulatingActors.AddUnique(Hit.GetActor());
-			}
-		}
-
-		// Store actor + its' data, and stop simulating physics on that actor
-		for (AActor*& Actor : SimulatingActors)
-		{
-			if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
-			{
-				const FBodyInstance BodyInstance = PrimComp->BodyInstance;
-				const FVector Velocity = BodyInstance.GetUnrealWorldVelocity();
-				ActorsCloseToPlayer.Add(Actor, FFrozenActorData{BodyInstance, Velocity});
-			
-				PrimComp->SetSimulatePhysics(false);
-				PrimComp->BodyInstance.bLockXTranslation = true;
-				PrimComp->BodyInstance.bLockYTranslation = true;
-				PrimComp->BodyInstance.bLockZTranslation = true;
-				PrimComp->BodyInstance.bLockXRotation = true;
-				PrimComp->BodyInstance.bLockYRotation = true;
-				PrimComp->BodyInstance.bLockZRotation = true;
+				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(SimulatingActors[i]->GetRootComponent()))
+				{
+					ActorsCloseToPlayer.Add(SimulatingActors[i], PrimComp->BodyInstance.GetUnrealWorldVelocity());
+					PrimComp->SetSimulatePhysics(false);
+				}
 			}
 		}
 	}
 
 	else // when not bending time, just reset all the stored actors
 	{
-		TArray<AActor*> Keys;
-		ActorsCloseToPlayer.GetKeys(Keys);
-	
-		for (int i = ActorsCloseToPlayer.Num() - 1; i >= 0; i--)
+		for (const auto Pair : ActorsCloseToPlayer)
 		{
-			if (!SimulatingActors.Contains(Keys[i]) && IsValid(Keys[i]))
+			if (IsValid(Pair.Key))
 			{
-				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Keys[i]->GetRootComponent()))
+				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Pair.Key->GetRootComponent()))
 				{
 					PrimComp->SetSimulatePhysics(true);
-					PrimComp->BodyInstance = ActorsCloseToPlayer[Keys[i]].BodyInstance;
-					PrimComp->BodyInstance.SetLinearVelocity(ActorsCloseToPlayer[Keys[i]].Velocity, false);
+					PrimComp->BodyInstance.SetLinearVelocity(Pair.Value, false);
 				}
-				
-				ActorsCloseToPlayer.Remove(Keys[i]);
-				Keys.RemoveAt(i);
 			}
 		}
+
+		ActorsCloseToPlayer.Empty();
 	}
 }
 
 void UAb_BendTime::TickTimeline()
 {
-	if (TimerStart != FDateTime::Now())
-	{
-		Timeline.TickTimeline((FDateTime::Now() - TimerStart).GetTotalSeconds());
-	}
-	
-	if (bIsBendingTime)
-	{
-		GetActorsCloseToPlayer();
-	}
-
-	if (bDrawTimeRemaining)
-	{
-		if (bIsBendingTime)
-		{
-			const float TimeLeft = BendTimeLength - Timeline.GetPlaybackPosition();
-			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Bend Time Remaining: %f"), TimeLeft));
-		}
-	}
-
+	Timeline.TickTimeline((FDateTime::Now() - TimerStart).GetTotalSeconds());
 	TimerStart = FDateTime::Now();
+	
+	GetActorsCloseToPlayer();
 	
 	if (Timeline.IsPlaying())
 	{
 		PlayerPtr->GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UAb_BendTime::TickTimeline);
+	}
+
+	if (bDrawTimeRemaining)
+	{
+		const float TimeLeft = BendTimeLength - Timeline.GetPlaybackPosition();
+		GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Bend Time Remaining: %f"), TimeLeft));
 	}
 }
