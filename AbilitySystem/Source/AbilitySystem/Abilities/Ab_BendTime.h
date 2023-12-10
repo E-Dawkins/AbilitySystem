@@ -49,6 +49,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "0.0"))
 	float TimeStopThreshold = 0.1f;
 
+	// The radius around the player to check for simulating actors.
+	// These actors have their physics disabled while ability is active.
+	UPROPERTY(EditAnywhere, Category = "BendTime", meta=(ClampMin = "100.0"))
+	float SimulatingActorsRadius = 250.f;
+
 	UPROPERTY(EditAnywhere, Category = "BendTime|Debugging")
 	bool bDrawTimeRemaining = false;
 	

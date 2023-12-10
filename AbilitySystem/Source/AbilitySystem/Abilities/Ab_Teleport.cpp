@@ -39,8 +39,9 @@ void UAb_Teleport::OnUse()
 		return;
 	}
 
-	// Disable player input temporarily
+	// Disable player input / collision temporarily
 	PlayerPtr->DisableInput(PlayerPtr->GetController<APlayerController>());
+	PlayerPtr->SetActorEnableCollision(false);
 	
 	if (bShouldCrouch)
 	{
@@ -102,15 +103,27 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 void UAb_Teleport::OnDeactivation()
 {
 	Super::OnDeactivation();
-	
-	NormalCursorPtr->Destroy();
-	LedgeCursorPtr->Destroy();
-	CrouchCursorPtr->Destroy();
+
+	if (IsValid(NormalCursorPtr))
+	{
+		NormalCursorPtr->Destroy();
+	}
+
+	if (IsValid(LedgeCursorPtr))
+	{
+		LedgeCursorPtr->Destroy();
+	}
+
+	if (IsValid(CrouchCursorPtr))
+	{
+		CrouchCursorPtr->Destroy();
+	}
 
 	if (PlayerPtr)
 	{
-		// Re-enable player input
+		// Re-enable player input / collision
 		PlayerPtr->EnableInput(PlayerPtr->GetController<APlayerController>());
+		PlayerPtr->SetActorEnableCollision(true);
 	}
 }
 

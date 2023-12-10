@@ -31,6 +31,8 @@ void UAb_BendTime::OnActivation(APlayerCharacter* _Player)
 
 void UAb_BendTime::OnUse()
 {
+	Super::OnUse();
+	
 	if (!PlayerPtr)
 	{
 		return;
@@ -111,7 +113,7 @@ void UAb_BendTime::GetActorsCloseToPlayer()
 		   PlayerPtr->GetActorLocation(),
 		   FQuat::Identity,
 		   ECC_WorldDynamic,
-		   FCollisionShape::MakeCapsule(PlayerPtr->GetSimpleCollisionCylinderExtent() * 1.25f)
+		   FCollisionShape::MakeSphere(SimulatingActorsRadius)
 	   );
 
 		// Filter out the simulating actors
@@ -177,16 +179,13 @@ void UAb_BendTime::TickTimeline()
 	{
 		GetActorsCloseToPlayer();
 	}
-	
+
 	if (bDrawTimeRemaining)
 	{
 		if (bIsBendingTime)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Bend Time Remaining: %f"), BendTimeLength - Timeline.GetPlaybackPosition()));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Red, FString::Printf(TEXT("Bend Time Not Active")));
+			const float TimeLeft = BendTimeLength - Timeline.GetPlaybackPosition();
+			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("Bend Time Remaining: %f"), TimeLeft));
 		}
 	}
 
