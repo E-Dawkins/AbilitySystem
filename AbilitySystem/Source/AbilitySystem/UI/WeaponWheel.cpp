@@ -3,9 +3,14 @@
 
 #include "WeaponWheel.h"
 
+#include <AbilitySystem/Abilities/BaseAbility.h>
+#include <Blueprint/WidgetTree.h>
+#include <Components/CanvasPanelSlot.h>
+
 #include "AbilitySystem/Player/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 void UWeaponWheel::NativeConstruct()
 {
@@ -30,6 +35,8 @@ void UWeaponWheel::NativeConstruct()
 
 		UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(PC);
     }
+
+	SpawnChildWidgets();
 }
 
 void UWeaponWheel::NativeDestruct()
@@ -47,5 +54,23 @@ void UWeaponWheel::NativeDestruct()
 		PC->SetShowMouseCursor(false);
 		PC->ResetIgnoreLookInput();
 		UWidgetBlueprintLibrary::SetInputMode_GameOnly(PC);
+	}
+}
+
+void UWeaponWheel::SpawnChildWidgets()
+{
+	for (const TSubclassOf<UUserWidget> Widget : AbilityWidgets)
+	{
+		UUserWidget* CreatedWidget = CreateWidget(this, Widget);
+	
+		if (UPanelWidget* Panel = Cast<UPanelWidget>(GetRootWidget()))
+		{
+			Panel->AddChild(CreatedWidget);
+			
+			FVector2D PlayerScreenSize = UWidgetLayoutLibrary::GetPlayerScreenWidgetGeometry(GetWorld()->GetFirstPlayerController()).GetLocalSize();
+			Cast<UCanvasPanelSlot>(CreatedWidget->Slot)->SetPosition(PlayerScreenSize * 0.5f);
+			Cast<UCanvasPanelSlot>(CreatedWidget->Slot)->SetAnchors(FAnchors());
+			Cast<UCanvasPanelSlot>(CreatedWidget->Slot)->SetAlignment(FVector2D(0.5f));
+		}
 	}
 }

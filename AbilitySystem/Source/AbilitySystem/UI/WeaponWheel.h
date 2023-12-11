@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponWheel.generated.h"
 
+class UBaseAbility;
 class APlayerCharacter;
 /**
  * 
@@ -20,7 +21,13 @@ public:
 	virtual void NativeDestruct() override;
 
 protected:
+	void SpawnChildWidgets();
+
+protected:
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerPtr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<TSubclassOf<UUserWidget>> AbilityWidgets;
 	
 };
