@@ -95,6 +95,12 @@ void APlayerCharacter::ToggleSprint()
 
 void APlayerCharacter::OnAbilityActivated()
 {
+	// Don't activate the ability if the weapon wheel is open
+	if (IsValid(WeaponWheelPtr) && WeaponWheelPtr->IsInViewport())
+	{
+		return;
+	}
+	
 	if (CurrentAbility)
 	{
 		CurrentAbility.GetDefaultObject()->OnActivation(this);
@@ -121,6 +127,12 @@ void APlayerCharacter::OpenWeaponWheel()
 	{
 		WeaponWheelPtr = CreateWidget<UWeaponWheel>(GetWorld(), WeaponWheelClass);
 		WeaponWheelPtr->AddToViewport();
+	}
+
+	// De-activate the currently activated ability, i.e. to stop player teleporting while wheel is open
+	if (CurrentAbility && CurrentAbility.GetDefaultObject()->GetActiveState())
+	{
+		CurrentAbility.GetDefaultObject()->OnDeactivation();
 	}
 }
 

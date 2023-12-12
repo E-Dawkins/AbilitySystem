@@ -35,13 +35,13 @@ protected:
 	
 	// The percent of the smallest screen length, that the wheel should cover
 	// i.e. Screen = (100, 200) | Percent = 0.25 | Radius = 100 * 0.25 = 25 pixels
-	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float RadiusAsPercent = 0.65f;
 
 	UPROPERTY(EditAnywhere)
 	FVector2D IconSize = FVector2D(50, 50);
 	
-	UPROPERTY(meta=(BindWidget))
+	UPROPERTY(BlueprintReadWrite, meta=(BindWidget))
 	UPanelWidget* WheelParent;
 	
 protected:

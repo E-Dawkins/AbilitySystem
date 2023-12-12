@@ -33,13 +33,6 @@ void UAb_BendTime::OnUse()
 void UAb_BendTime::OnDeactivation()
 {
 	Super::OnDeactivation();
-
-	if (!PlayerPtr)
-	{
-		return;
-	}
-	
-	Reset();
 }
 
 void UAb_BendTime::Setup()
@@ -78,7 +71,7 @@ void UAb_BendTime::ToggleTimeBend()
 	
 	if (!bIsBendingTime) // bend end
 	{
-		OnDeactivation();
+		Reset();
 	}
 	else // bend start
 	{

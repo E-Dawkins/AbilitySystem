@@ -155,8 +155,6 @@ void FHelpers::SetGlobalDilation(const UWorld* _World, float _NewDilation, bool 
 			_PlayerPtr->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			_PlayerPtr->GetCharacterMovement()->Velocity = _Velocity;
 		}, PlayerPtr, PlayerVelocity);
-		PlayerPtr->GetWorld()->GetTimerManager().SetTimerForNextTick(EndDelegate);
+		_World->GetTimerManager().SetTimerForNextTick(EndDelegate);
 	}
-	
-	UGameplayStatics::SetGlobalTimeDilation(_World, _NewDilation);
 }

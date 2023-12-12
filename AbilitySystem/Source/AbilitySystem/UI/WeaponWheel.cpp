@@ -45,7 +45,7 @@ void UWeaponWheel::NativeConstruct()
 void UWeaponWheel::NativeDestruct()
 {
 	Super::NativeDestruct();
-
+	
 	if (WheelTimeDilation < InitialWorldTimeDilation)
 	{
 		FHelpers::SetGlobalDilation(GetWorld(), InitialWorldTimeDilation);
