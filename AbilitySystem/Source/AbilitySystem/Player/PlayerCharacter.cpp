@@ -44,7 +44,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction(TEXT("AbilityUse"), IE_Pressed, this, &APlayerCharacter::OnAbilityActivated);
 	PlayerInputComponent->BindAction(TEXT("AbilityUse"), IE_Released, this, &APlayerCharacter::OnAbilityUsed);
 	PlayerInputComponent->BindAction(TEXT("WeaponWheelUse"), IE_Pressed, this, &APlayerCharacter::OpenWeaponWheel);
-	PlayerInputComponent->BindAction(TEXT("WeaponWheelUse"), IE_Released, this, &APlayerCharacter::OpenWeaponWheel);
+	PlayerInputComponent->BindAction(TEXT("WeaponWheelUse"), IE_Released, this, &APlayerCharacter::CloseWeaponWheel);
 
 	// Axis
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &APlayerCharacter::MoveForward);
@@ -113,21 +113,21 @@ void APlayerCharacter::OpenWeaponWheel()
 {
 	if (!IsValid(WeaponWheelClass))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString("Weapon Wheel Class Not Set!"));
+		GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString("WeaponWheelClass Not Set!"));
 		return;
 	}
 	
-	if (!IsValid(WeaponWheelPtr))
+	if (!IsValid(WeaponWheelPtr) || !WeaponWheelPtr->IsInViewport())
 	{
 		WeaponWheelPtr = CreateWidget<UWeaponWheel>(GetWorld(), WeaponWheelClass);
+		WeaponWheelPtr->AddToViewport();
 	}
-	
-	if (WeaponWheelPtr->IsInViewport())
+}
+
+void APlayerCharacter::CloseWeaponWheel()
+{
+	if (IsValid(WeaponWheelPtr))
 	{
 		WeaponWheelPtr->RemoveFromViewport();
-	}
-	else
-	{
-		WeaponWheelPtr->AddToViewport();
 	}
 }

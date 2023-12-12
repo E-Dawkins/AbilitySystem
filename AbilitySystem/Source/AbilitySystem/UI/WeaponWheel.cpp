@@ -4,6 +4,7 @@
 #include "WeaponWheel.h"
 
 #include <AbilitySystem/Abilities/BaseAbility.h>
+#include <AbilitySystem/_Misc/Helpers.h>
 #include <Blueprint/WidgetTree.h>
 #include <Components/CanvasPanelSlot.h>
 
@@ -17,6 +18,8 @@ void UWeaponWheel::NativeConstruct()
 	Super::NativeConstruct();
 
 	PlayerPtr = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+	InitialWorldTimeDilation = GetWorld()->GetWorldSettings()->TimeDilation;
 	
 	if (!IsValid(PlayerPtr))
     {
@@ -43,6 +46,11 @@ void UWeaponWheel::NativeDestruct()
 {
 	Super::NativeDestruct();
 
+	if (WheelTimeDilation < InitialWorldTimeDilation)
+	{
+		FHelpers::SetGlobalDilation(GetWorld(), InitialWorldTimeDilation);
+	}
+
 	if (!IsValid(PlayerPtr))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("Player is null in WeaponWheel->NativeDestruct()"));
@@ -57,8 +65,33 @@ void UWeaponWheel::NativeDestruct()
 	}
 }
 
+void UWeaponWheel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	CurrentWorldTimeDilation = GetWorld()->GetWorldSettings()->TimeDilation;
+
+	if (WheelTimeDilation < CurrentWorldTimeDilation)
+	{
+		FHelpers::SetGlobalDilation(GetWorld(), WheelTimeDilation);
+		InitialWorldTimeDilation = CurrentWorldTimeDilation;
+	}
+}
+
 void UWeaponWheel::SpawnChildWidgets()
 {
+	const FVector2D HalfScreenSize = UWidgetLayoutLibrary::GetPlayerScreenWidgetGeometry(GetWorld()->GetFirstPlayerController()).GetLocalSize() * 0.5f;
+	const float Radius = HalfScreenSize.GetMin() * RadiusAsPercent;
+	
+	if (UCanvasPanelSlot* WheelParentSlot = Cast<UCanvasPanelSlot>(WheelParent->Slot))
+	{
+		WheelParentSlot->SetSize(FVector2D(Radius * 2.f));
+		WheelParentSlot->SetAnchors(FAnchors(0.5f));
+		WheelParentSlot->SetAlignment(FVector2D(0.5f));
+	}
+	
+	FVector2D WidgetLocation = FVector2D(0, -Radius);
+	
 	for (const TSubclassOf<UUserWidget> Widget : AbilityWidgets)
 	{
 		UUserWidget* CreatedWidget = CreateWidget(this, Widget);
@@ -66,11 +99,22 @@ void UWeaponWheel::SpawnChildWidgets()
 		if (UPanelWidget* Panel = Cast<UPanelWidget>(GetRootWidget()))
 		{
 			Panel->AddChild(CreatedWidget);
-			
-			FVector2D PlayerScreenSize = UWidgetLayoutLibrary::GetPlayerScreenWidgetGeometry(GetWorld()->GetFirstPlayerController()).GetLocalSize();
-			Cast<UCanvasPanelSlot>(CreatedWidget->Slot)->SetPosition(PlayerScreenSize * 0.5f);
-			Cast<UCanvasPanelSlot>(CreatedWidget->Slot)->SetAnchors(FAnchors());
-			Cast<UCanvasPanelSlot>(CreatedWidget->Slot)->SetAlignment(FVector2D(0.5f));
+
+			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(CreatedWidget->Slot))
+			{
+				CanvasSlot->SetAnchors(FAnchors(0.5f));
+				CanvasSlot->SetPosition(WidgetLocation);
+
+				FVector2D Alignment = WidgetLocation.GetSafeNormal();
+
+				Alignment.X = FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(0, 1), Alignment.X);
+				Alignment.Y = FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(0, 1), Alignment.Y);
+
+				CanvasSlot->SetAlignment(Alignment);
+				CanvasSlot->SetSize(IconSize);
+
+				WidgetLocation = WidgetLocation.GetRotated(360.f / (float)AbilityWidgets.Num());
+			}
 		}
 	}
 }

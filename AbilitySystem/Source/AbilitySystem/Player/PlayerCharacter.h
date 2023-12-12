@@ -33,6 +33,7 @@ private:
 	void OnAbilityUsed();
 	void OnAbilityActivated();
 	void OpenWeaponWheel();
+	void CloseWeaponWheel();
 
 public:
 	UFUNCTION(BlueprintCallable)

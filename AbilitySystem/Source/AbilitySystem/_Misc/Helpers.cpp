@@ -5,6 +5,7 @@
 #include "DrawDebugHelpers.h"
 #include "../Player/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void FHelpers::GetLocalAxisFromForward(FVector _Forward, FVector& _Right, FVector& _Up)
 {
@@ -131,4 +132,31 @@ FVector FHelpers::MoveTowards(FVector _Current, FVector _Target, float _MaxDista
 	}
 
 	return _Current + Direction.GetSafeNormal() * _MaxDistanceDelta;
+}
+
+void FHelpers::SetGlobalDilation(const UWorld* _World, float _NewDilation, bool _bStopPlayerInputForFrame)
+{
+	if (!_World)
+	{
+		return;
+	}
+
+	UGameplayStatics::SetGlobalTimeDilation(_World, _NewDilation);
+	
+	if (_bStopPlayerInputForFrame)
+	{
+		ACharacter* PlayerPtr = UGameplayStatics::GetPlayerCharacter(_World, 0);
+
+		const FVector PlayerVelocity = PlayerPtr->GetCharacterMovement()->Velocity;
+		PlayerPtr->GetCharacterMovement()->SetMovementMode(MOVE_None);
+
+		const FTimerDelegate EndDelegate = FTimerDelegate::CreateLambda([] (ACharacter* _PlayerPtr, FVector _Velocity)
+		{
+			_PlayerPtr->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			_PlayerPtr->GetCharacterMovement()->Velocity = _Velocity;
+		}, PlayerPtr, PlayerVelocity);
+		PlayerPtr->GetWorld()->GetTimerManager().SetTimerForNextTick(EndDelegate);
+	}
+	
+	UGameplayStatics::SetGlobalTimeDilation(_World, _NewDilation);
 }

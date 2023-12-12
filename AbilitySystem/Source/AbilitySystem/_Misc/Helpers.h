@@ -65,4 +65,6 @@ public:
 		FDebugHelper _DebugHelper, FVector& _DepenetrationVector, const float _DepenetrationPadding = 5.f, const ECollisionChannel _CollisionChannel = ECC_Visibility);
 
 	static FVector MoveTowards(FVector _Current, FVector _Target, float _MaxDistanceDelta);
+
+	static void SetGlobalDilation(const UWorld* _World, float _NewDilation, bool _bStopPlayerInputForFrame = true);
 };
