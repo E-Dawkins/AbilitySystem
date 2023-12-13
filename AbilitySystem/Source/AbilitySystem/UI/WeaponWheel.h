@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponWheel.generated.h"
 
+class UImage;
 class APlayerCharacter;
 /**
  * 
@@ -20,7 +21,8 @@ public:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 protected:
-	void SpawnChildWidgets();
+	void SetupBoundWidgets();
+	void SpawnIconWidgets();
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
@@ -35,16 +37,25 @@ protected:
 	
 	// The percent of the smallest screen length, that the wheel should cover
 	// i.e. Screen = (100, 200) | Percent = 0.25 | Radius = 100 * 0.25 = 25 pixels
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "0.9"))
+	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float RadiusAsPercent = 0.65f;
 
 	UPROPERTY(EditAnywhere)
 	FVector2D IconSize = FVector2D(50, 50);
-	
-	UPROPERTY(BlueprintReadWrite, meta=(BindWidget))
+
+	// Same logic as RadiusAsPercent, i.e percent of the smallest screen length
+	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
+	float ArrowPositionAsPercent = 0.5f;
+
+	UPROPERTY(meta=(BindWidget))
 	UPanelWidget* WheelParent;
+
+	UPROPERTY(meta=(BindWidget))
+	UImage* ArrowImage;
 	
 protected:
+	FVector2D HalfScreenSize = FVector2D::UnitVector;
+	
 	float InitialWorldTimeDilation = 1.f;
 	float CurrentWorldTimeDilation = 1.f;
 	
