@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "../Player/PlayerCharacter.h"
 #include "BaseAbility.generated.h"
 
+class APlayerCharacter;
 /**
  * 
  */
@@ -29,6 +29,13 @@ public:
 public:
 	bool GetActiveState() const { return bAbilityActive; }
 
+public:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UTexture2D* NormalIcon;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UTexture2D* HighlightedIcon;
+	
 protected:
 	UPROPERTY()
 	APlayerCharacter* PlayerPtr;

@@ -147,6 +147,11 @@ void FHelpers::SetGlobalDilation(const UWorld* _World, float _NewDilation, bool 
 	{
 		ACharacter* PlayerPtr = UGameplayStatics::GetPlayerCharacter(_World, 0);
 
+		if (!IsValid(PlayerPtr))
+		{
+			return;
+		}
+
 		const FVector PlayerVelocity = PlayerPtr->GetCharacterMovement()->Velocity;
 		PlayerPtr->GetCharacterMovement()->SetMovementMode(MOVE_None);
 

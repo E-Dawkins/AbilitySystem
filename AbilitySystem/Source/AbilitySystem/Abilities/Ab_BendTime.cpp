@@ -2,6 +2,8 @@
 
 
 #include "Ab_BendTime.h"
+
+#include "AbilitySystem/Player/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"

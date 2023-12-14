@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "../Abilities/BaseAbility.h"
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
-class UBaseAbility;
+class UPlayerHUD;
 class UWeaponWheel;
 
 UCLASS(hideCategories = (Replication, Rendering, Actor, LOD, Cooking, ActorTick))
@@ -39,6 +40,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentAbility(TSubclassOf<UBaseAbility> _NewAbility) { CurrentAbility = _NewAbility; }
 
+	UFUNCTION(BlueprintCallable)
+	UBaseAbility* GetCurrentAbility() const { return CurrentAbility.GetDefaultObject(); }
+
+	UFUNCTION(BlueprintCallable)
+	UPlayerHUD* GetPlayerHUD() const {return PlayerHUDPtr; }
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
 	float MaxWalkSpeed = 600.f;
@@ -55,10 +62,16 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character")
 	TSubclassOf<UWeaponWheel> WeaponWheelClass;
 
+	UPROPERTY(EditAnywhere, Category = "Character")
+	TSubclassOf<UPlayerHUD> PlayerHUDClass;
+
 private:
 	bool bIsSprinting = false;
 
 	UPROPERTY()
 	UWeaponWheel* WeaponWheelPtr = nullptr;
+
+	UPROPERTY()
+	UPlayerHUD* PlayerHUDPtr = nullptr;
 
 };

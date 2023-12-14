@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponWheel.generated.h"
 
+class UBaseAbility;
 class UImage;
 class APlayerCharacter;
 /**
@@ -23,29 +24,30 @@ public:
 protected:
 	void SetupBoundWidgets();
 	void SpawnIconWidgets();
+	void UpdateArrow();
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerPtr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<TSubclassOf<UBaseAbility>> Abilities;
+	
 	// The time dilation while the weapon wheel is open
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.1", ClampMax = "1.0"))
 	float WheelTimeDilation = 0.25f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<TSubclassOf<UUserWidget>> AbilityWidgets;
 	
 	// The percent of the smallest screen length, that the wheel should cover
 	// i.e. Screen = (100, 200) | Percent = 0.25 | Radius = 100 * 0.25 = 25 pixels
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float RadiusAsPercent = 0.65f;
 
-	UPROPERTY(EditAnywhere)
-	FVector2D IconSize = FVector2D(50, 50);
-
 	// Same logic as RadiusAsPercent, i.e percent of the smallest screen length
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float ArrowPositionAsPercent = 0.5f;
+	
+	UPROPERTY(EditAnywhere)
+	FVector2D IconSize = FVector2D(50, 50);
 
 	UPROPERTY(meta=(BindWidget))
 	UPanelWidget* WheelParent;
@@ -55,8 +57,12 @@ protected:
 	
 protected:
 	FVector2D HalfScreenSize = FVector2D::UnitVector;
+
+	TArray<UImage*> Icons;
 	
 	float InitialWorldTimeDilation = 1.f;
 	float CurrentWorldTimeDilation = 1.f;
+
+	int SelectedAbilityIndex = -1;
 	
 };

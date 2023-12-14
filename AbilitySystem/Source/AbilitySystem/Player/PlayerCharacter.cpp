@@ -4,6 +4,7 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "../Abilities/BaseAbility.h"
+#include "AbilitySystem/UI/PlayerHUD.h"
 #include "AbilitySystem/UI/WeaponWheel.h"
 
 APlayerCharacter::APlayerCharacter()
@@ -14,6 +15,12 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsValid(PlayerHUDClass))
+	{
+		PlayerHUDPtr = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
+		PlayerHUDPtr->AddToViewport();
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
