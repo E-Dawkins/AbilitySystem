@@ -8,7 +8,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 
-void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position, FVector2D _Size)
+void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position)
 {
 	if (!IsValid(_WidgetTree))
 	{
@@ -38,7 +38,7 @@ void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _I
 		Alignment.Y = FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(0, 1), Alignment.Y);
 
 		CanvasSlot->SetAlignment(Alignment);
-		CanvasSlot->SetSize(_Size);
+		CanvasSlot->SetSize(NormalSize);
 	}
 }
 
@@ -46,8 +46,12 @@ void UWeaponWheelItem::ItemSelect()
 {
 	if (IsValid(ImageWidget) && IsValid(SelectedIcon))
 	{
-		
 		ImageWidget->SetBrushFromTexture(SelectedIcon);
+
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(ImageWidget->Slot))
+		{
+			CanvasSlot->SetSize(SelectedSize);
+		}
 	}
 }
 
@@ -56,6 +60,11 @@ void UWeaponWheelItem::ItemDeselect()
 	if (IsValid(ImageWidget) && IsValid(NormalIcon))
 	{
 		ImageWidget->SetBrushFromTexture(NormalIcon);
+		
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(ImageWidget->Slot))
+		{
+			CanvasSlot->SetSize(NormalSize);
+		}
 	}
 }
 

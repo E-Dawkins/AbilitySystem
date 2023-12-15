@@ -47,9 +47,10 @@ protected:
 	// Same logic as RadiusAsPercent, i.e percent of the smallest screen length
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float ArrowPositionAsPercent = 0.5f;
-	
+
+	// The amount the wheel will tilt in each axis direction, towards the mouse
 	UPROPERTY(EditAnywhere)
-	FVector2D IconSize = FVector2D(50, 50);
+	FVector2D WheelTilt = FVector2D(5, 5);
 
 	UPROPERTY(meta=(BindWidget))
 	UPanelWidget* WheelParent;
@@ -65,6 +66,7 @@ protected:
 	float InitialWorldTimeDilation = 1.f;
 	float CurrentWorldTimeDilation = 1.f;
 
+	int LastSelectedItemIndex = -1;
 	int SelectedItemIndex = -1;
 	
 };

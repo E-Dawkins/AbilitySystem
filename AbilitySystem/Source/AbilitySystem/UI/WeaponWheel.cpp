@@ -123,7 +123,7 @@ void UWeaponWheel::SpawnIconWidgets()
 		}
 		
 		WheelItemPtrs.Add(NewObject<UWeaponWheelItem>(this, WheelItems[i]));
-		WheelItemPtrs.Last()->InitializeItem(WidgetTree, WheelParent, WidgetLocation, IconSize);
+		WheelItemPtrs.Last()->InitializeItem(WidgetTree, WheelParent, WidgetLocation);
 		
 		WidgetLocation = WidgetLocation.GetRotated(360.f / WheelItems.Num());
 	}
@@ -148,7 +148,6 @@ void UWeaponWheel::UpdateArrow()
 			const float DegreesPerIcon = 360.f / WheelItemPtrs.Num();
 
 			float SmallestAngle = 360.f;
-			static int LastItemIndex = 0;
 				
 			for (int i = 0; i < WheelItemPtrs.Num(); i++)
 			{
@@ -164,15 +163,22 @@ void UWeaponWheel::UpdateArrow()
 				}
 			}
 
+			// Highlight the correct wheel item
 			if (WheelItemPtrs.IsValidIndex(SelectedItemIndex))
 			{
-				if (LastItemIndex != SelectedItemIndex)
+				if (LastSelectedItemIndex != SelectedItemIndex && WheelItemPtrs.IsValidIndex(LastSelectedItemIndex))
 				{
-					WheelItemPtrs[LastItemIndex]->ItemDeselect();
+					WheelItemPtrs[LastSelectedItemIndex]->ItemDeselect();
 				}
 					
 				WheelItemPtrs[SelectedItemIndex]->ItemSelect();
-				LastItemIndex = SelectedItemIndex;
+				LastSelectedItemIndex = SelectedItemIndex;
+			}
+
+			// Tilt wheel based off mouse position
+			if (IsValid(WheelParent))
+			{
+				WheelParent->SetRenderShear(DirToMouse * WheelTilt);
 			}
 		}
 	}

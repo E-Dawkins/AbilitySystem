@@ -19,7 +19,7 @@ class ABILITYSYSTEM_API UWeaponWheelItem : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position, FVector2D _Size);
+	virtual void InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position);
 	virtual void ItemSelect();
 	virtual void ItemDeselect();
 
@@ -32,6 +32,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UTexture2D* SelectedIcon;
+
+	UPROPERTY(EditAnywhere)
+	FVector2D NormalSize = FVector2D(125);
+
+	UPROPERTY(EditAnywhere)
+	FVector2D SelectedSize = FVector2D(140);
 	
 private:
 	UPROPERTY()
