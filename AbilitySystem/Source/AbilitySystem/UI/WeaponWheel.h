@@ -5,8 +5,8 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponWheel.generated.h"
 
-class UBaseAbility;
 class UImage;
+class UWeaponWheelItem;
 class APlayerCharacter;
 /**
  * 
@@ -22,16 +22,18 @@ public:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 protected:
+	void SetupPlayer();
 	void SetupBoundWidgets();
 	void SpawnIconWidgets();
 	void UpdateArrow();
 
-protected:
+public:
 	UPROPERTY(BlueprintReadOnly)
 	APlayerCharacter* PlayerPtr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<TSubclassOf<UBaseAbility>> Abilities;
+	
+protected:
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<UWeaponWheelItem>> WheelItems;
 	
 	// The time dilation while the weapon wheel is open
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.1", ClampMax = "1.0"))
@@ -56,13 +58,13 @@ protected:
 	UImage* ArrowImage;
 	
 protected:
+	TArray<UWeaponWheelItem*> WheelItemPtrs;
+	
 	FVector2D HalfScreenSize = FVector2D::UnitVector;
-
-	TArray<UImage*> Icons;
 	
 	float InitialWorldTimeDilation = 1.f;
 	float CurrentWorldTimeDilation = 1.f;
 
-	int SelectedAbilityIndex = -1;
+	int SelectedItemIndex = -1;
 	
 };

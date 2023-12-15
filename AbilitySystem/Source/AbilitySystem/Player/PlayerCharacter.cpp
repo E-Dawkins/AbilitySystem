@@ -150,3 +150,13 @@ void APlayerCharacter::CloseWeaponWheel()
 		WeaponWheelPtr->RemoveFromViewport();
 	}
 }
+
+void APlayerCharacter::SetCurrentAbility(TSubclassOf<UBaseAbility> _NewAbility)
+{
+	CurrentAbility = _NewAbility;
+
+	if (IsValid(PlayerHUDPtr))
+	{
+		PlayerHUDPtr->SetAbilityIcon();
+	}
+}

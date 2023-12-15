@@ -7,7 +7,7 @@
 #include <Components/CanvasPanelSlot.h>
 
 #include "PlayerHUD.h"
-#include "AbilitySystem/Abilities/BaseAbility.h"
+#include "WeaponWheelItem.h"
 #include "AbilitySystem/Player/PlayerCharacter.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
@@ -17,29 +17,9 @@ void UWeaponWheel::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	PlayerPtr = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetCharacter());
-
 	InitialWorldTimeDilation = GetWorld()->GetWorldSettings()->TimeDilation;
-	
-	if (!IsValid(PlayerPtr))
-    {
-    	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, TEXT("Player is null in WeaponWheel->NativeConstruct()"));
-    	return;
-    }
-    
-	if (APlayerController* PC = Cast<APlayerController>(PlayerPtr->GetController()))
-    {
-    	PC->SetShowMouseCursor(true);
-		PC->SetIgnoreLookInput(true);
-		PC->SetInputMode(FInputModeGameAndUI());
 
-		FVector2D ViewportSize;
-		GEngine->GameViewport->GetViewportSize(ViewportSize);
-		HalfScreenSize = ViewportSize * 0.5f;
-		
-		PC->SetMouseLocation(HalfScreenSize.X, HalfScreenSize.Y - HalfScreenSize.Y * RadiusAsPercent);
-    }
-
+	SetupPlayer();
 	SetupBoundWidgets();
 	SpawnIconWidgets();
 }
@@ -65,16 +45,6 @@ void UWeaponWheel::NativeDestruct()
 		PC->ResetIgnoreLookInput();
 		PC->SetInputMode(FInputModeGameOnly());
 	}
-
-	if (Abilities.IsValidIndex(SelectedAbilityIndex))
-	{
-		PlayerPtr->SetCurrentAbility(Abilities[SelectedAbilityIndex]);
-
-		if (UPlayerHUD* PlayerHUD = PlayerPtr->GetPlayerHUD())
-		{
-			PlayerHUD->SetAbilityIcon();
-		}
-	}
 }
 
 void UWeaponWheel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -92,6 +62,26 @@ void UWeaponWheel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	if (ArrowImage)
 	{
 		UpdateArrow();
+	}
+}
+
+void UWeaponWheel::SetupPlayer()
+{
+	PlayerPtr = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetCharacter());
+
+	if (IsValid(PlayerPtr))
+	{
+		if (APlayerController* PC = Cast<APlayerController>(PlayerPtr->GetController()))
+		{
+			PC->SetShowMouseCursor(true);
+			PC->SetIgnoreLookInput(true);
+			PC->SetInputMode(FInputModeGameAndUI());
+			
+			GEngine->GameViewport->GetViewportSize(HalfScreenSize);
+			HalfScreenSize *= 0.5f;
+		
+			PC->SetMouseLocation(HalfScreenSize.X, HalfScreenSize.Y * (1.f - RadiusAsPercent));
+		}
 	}
 }
 
@@ -124,32 +114,18 @@ void UWeaponWheel::SpawnIconWidgets()
 {
 	FVector2D WidgetLocation = FVector2D(0, -HalfScreenSize.GetMin() * RadiusAsPercent);
 	
-	for (const TSubclassOf<UBaseAbility> Ability : Abilities)
+	for (int i = 0; i < WheelItems.Num(); i++)
 	{
-		if (WheelParent)
+		if (!IsValid(WheelItems[i]))
 		{
-			UImage* CreatedIcon = WidgetTree->ConstructWidget<UImage>();
-			CreatedIcon->SetBrushFromTexture(Ability.GetDefaultObject()->NormalIcon);
-			Icons.Add(CreatedIcon);
-			
-			WheelParent->AddChild(CreatedIcon);
-
-			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(CreatedIcon->Slot))
-			{
-				CanvasSlot->SetAnchors(FAnchors(0.5f));
-				CanvasSlot->SetPosition(WidgetLocation);
-				
-				FVector2D Alignment = WidgetLocation.GetSafeNormal();
-
-				Alignment.X = FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(0, 1), Alignment.X);
-				Alignment.Y = FMath::GetMappedRangeValueClamped(FVector2D(-1, 1), FVector2D(0, 1), Alignment.Y);
-
-				CanvasSlot->SetAlignment(Alignment);
-				CanvasSlot->SetSize(IconSize);
-				
-				WidgetLocation = WidgetLocation.GetRotated(360.f / static_cast<float>(Abilities.Num()));
-			}
+			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Item at index %i not valid in UWeaponWheel::SpawnIconWidgets()"), i));
+			continue;
 		}
+		
+		WheelItemPtrs.Add(NewObject<UWeaponWheelItem>(this, WheelItems[i]));
+		WheelItemPtrs.Last()->InitializeItem(WidgetTree, WheelParent, WidgetLocation, IconSize);
+		
+		WidgetLocation = WidgetLocation.GetRotated(360.f / WheelItems.Num());
 	}
 }
 
@@ -169,14 +145,14 @@ void UWeaponWheel::UpdateArrow()
 			ArrowImageSlot->SetPosition(DirToMouse * HalfScreenSize.GetMin() * ArrowPositionAsPercent);
 			ArrowImage->SetRenderTransformAngle(FVector(DirToMouse, 0).Rotation().Yaw);
 
-			const float DegreesPerIcon = 360.f / static_cast<float>(Abilities.Num());
+			const float DegreesPerIcon = 360.f / WheelItemPtrs.Num();
 
 			float SmallestAngle = 360.f;
-			static int LastAbilityIndex = 0;
+			static int LastItemIndex = 0;
 				
-			for (int i = 0; i < Icons.Num(); i++)
+			for (int i = 0; i < WheelItemPtrs.Num(); i++)
 			{
-				const FVector2D DirToIcon = Cast<UCanvasPanelSlot>(Icons[i]->Slot)->GetPosition().GetSafeNormal();
+				const FVector2D DirToIcon = WheelItemPtrs[i]->GetPosition().GetSafeNormal();
 
 				const float Dot = FVector2D::DotProduct(DirToMouse, DirToIcon);
 				const float ACosD = FMath::RadiansToDegrees(FMath::Acos(Dot));
@@ -184,19 +160,19 @@ void UWeaponWheel::UpdateArrow()
 				if (ACosD <= SmallestAngle && ACosD <= DegreesPerIcon)
 				{
 					SmallestAngle = ACosD;
-					SelectedAbilityIndex = i;
+					SelectedItemIndex = i;
 				}
 			}
 
-			if (Abilities.IsValidIndex(SelectedAbilityIndex))
+			if (WheelItemPtrs.IsValidIndex(SelectedItemIndex))
 			{
-				if (LastAbilityIndex != SelectedAbilityIndex)
+				if (LastItemIndex != SelectedItemIndex)
 				{
-					Icons[LastAbilityIndex]->SetBrushFromTexture(Abilities[LastAbilityIndex].GetDefaultObject()->NormalIcon);
+					WheelItemPtrs[LastItemIndex]->ItemDeselect();
 				}
 					
-				Icons[SelectedAbilityIndex]->SetBrushFromTexture(Abilities[SelectedAbilityIndex].GetDefaultObject()->HighlightedIcon);
-				LastAbilityIndex = SelectedAbilityIndex;
+				WheelItemPtrs[SelectedItemIndex]->ItemSelect();
+				LastItemIndex = SelectedItemIndex;
 			}
 		}
 	}

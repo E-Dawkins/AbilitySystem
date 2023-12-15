@@ -38,7 +38,7 @@ private:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetCurrentAbility(TSubclassOf<UBaseAbility> _NewAbility) { CurrentAbility = _NewAbility; }
+	void SetCurrentAbility(TSubclassOf<UBaseAbility> _NewAbility);
 
 	UFUNCTION(BlueprintCallable)
 	UBaseAbility* GetCurrentAbility() const { return CurrentAbility.GetDefaultObject(); }
