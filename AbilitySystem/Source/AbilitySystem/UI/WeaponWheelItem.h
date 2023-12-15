@@ -20,8 +20,9 @@ class ABILITYSYSTEM_API UWeaponWheelItem : public UObject
 
 public:
 	virtual void InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position);
+	virtual void ItemHover();
+	virtual void ItemUnHover();
 	virtual void ItemSelect();
-	virtual void ItemDeselect();
 
 	FVector2D GetPosition() const;
 	APlayerCharacter* GetPlayerPtr();

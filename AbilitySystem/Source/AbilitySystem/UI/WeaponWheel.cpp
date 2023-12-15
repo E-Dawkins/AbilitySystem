@@ -5,12 +5,8 @@
 
 #include <AbilitySystem/_Misc/Helpers.h>
 #include <Components/CanvasPanelSlot.h>
-
-#include "PlayerHUD.h"
 #include "WeaponWheelItem.h"
 #include "AbilitySystem/Player/PlayerCharacter.h"
-#include "Blueprint/WidgetTree.h"
-#include "Components/Image.h"
 #include "Components/PanelWidget.h"
 
 void UWeaponWheel::NativeConstruct()
@@ -44,6 +40,11 @@ void UWeaponWheel::NativeDestruct()
 		PC->SetShowMouseCursor(false);
 		PC->ResetIgnoreLookInput();
 		PC->SetInputMode(FInputModeGameOnly());
+	}
+
+	if (WheelItemPtrs.IsValidIndex(SelectedItemIndex))
+	{
+		WheelItemPtrs[SelectedItemIndex]->ItemSelect();
 	}
 }
 
@@ -144,19 +145,15 @@ void UWeaponWheel::UpdateArrow()
 			
 			ArrowImageSlot->SetPosition(DirToMouse * HalfScreenSize.GetMin() * ArrowPositionAsPercent);
 			ArrowImage->SetRenderTransformAngle(FVector(DirToMouse, 0).Rotation().Yaw);
-
-			const float DegreesPerIcon = 360.f / WheelItemPtrs.Num();
-
+			
 			float SmallestAngle = 360.f;
 				
 			for (int i = 0; i < WheelItemPtrs.Num(); i++)
 			{
-				const FVector2D DirToIcon = WheelItemPtrs[i]->GetPosition().GetSafeNormal();
-
-				const float Dot = FVector2D::DotProduct(DirToMouse, DirToIcon);
+				const float Dot = FVector2D::DotProduct(DirToMouse, WheelItemPtrs[i]->GetPosition().GetSafeNormal());
 				const float ACosD = FMath::RadiansToDegrees(FMath::Acos(Dot));
 
-				if (ACosD <= SmallestAngle && ACosD <= DegreesPerIcon)
+				if (ACosD <= SmallestAngle)
 				{
 					SmallestAngle = ACosD;
 					SelectedItemIndex = i;
@@ -168,17 +165,11 @@ void UWeaponWheel::UpdateArrow()
 			{
 				if (LastSelectedItemIndex != SelectedItemIndex && WheelItemPtrs.IsValidIndex(LastSelectedItemIndex))
 				{
-					WheelItemPtrs[LastSelectedItemIndex]->ItemDeselect();
+					WheelItemPtrs[LastSelectedItemIndex]->ItemUnHover();
 				}
 					
-				WheelItemPtrs[SelectedItemIndex]->ItemSelect();
+				WheelItemPtrs[SelectedItemIndex]->ItemHover();
 				LastSelectedItemIndex = SelectedItemIndex;
-			}
-
-			// Tilt wheel based off mouse position
-			if (IsValid(WheelParent))
-			{
-				WheelParent->SetRenderShear(DirToMouse * WheelTilt);
 			}
 		}
 	}

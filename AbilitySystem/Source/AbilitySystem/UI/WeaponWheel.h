@@ -48,10 +48,6 @@ protected:
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float ArrowPositionAsPercent = 0.5f;
 
-	// The amount the wheel will tilt in each axis direction, towards the mouse
-	UPROPERTY(EditAnywhere)
-	FVector2D WheelTilt = FVector2D(5, 5);
-
 	UPROPERTY(meta=(BindWidget))
 	UPanelWidget* WheelParent;
 

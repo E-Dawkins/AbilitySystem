@@ -42,7 +42,7 @@ void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _I
 	}
 }
 
-void UWeaponWheelItem::ItemSelect()
+void UWeaponWheelItem::ItemHover()
 {
 	if (IsValid(ImageWidget) && IsValid(SelectedIcon))
 	{
@@ -55,7 +55,7 @@ void UWeaponWheelItem::ItemSelect()
 	}
 }
 
-void UWeaponWheelItem::ItemDeselect()
+void UWeaponWheelItem::ItemUnHover()
 {
 	if (IsValid(ImageWidget) && IsValid(NormalIcon))
 	{
@@ -67,6 +67,13 @@ void UWeaponWheelItem::ItemDeselect()
 		}
 	}
 }
+
+void UWeaponWheelItem::ItemSelect()
+{
+	
+}
+
+#pragma region Helpers
 
 FVector2D UWeaponWheelItem::GetPosition() const
 {
@@ -90,3 +97,5 @@ APlayerCharacter* UWeaponWheelItem::GetPlayerPtr()
 
 	return PlayerPtr;
 }
+
+#pragma endregion
