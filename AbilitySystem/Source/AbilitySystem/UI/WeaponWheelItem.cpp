@@ -7,8 +7,9 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Kismet/GameplayStatics.h"
 
-void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position)
+void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position, FVector2D _NormalSize, FVector2D _SelectedSize)
 {
 	if (!IsValid(_WidgetTree))
 	{
@@ -40,6 +41,9 @@ void UWeaponWheelItem::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _I
 		CanvasSlot->SetAlignment(Alignment);
 		CanvasSlot->SetSize(NormalSize);
 	}
+
+	NormalSize = _NormalSize;
+	SelectedSize = _SelectedSize;
 }
 
 void UWeaponWheelItem::ItemHover()
@@ -92,7 +96,7 @@ APlayerCharacter* UWeaponWheelItem::GetPlayerPtr()
 {
 	if (!IsValid(PlayerPtr))
 	{
-		PlayerPtr = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetCharacter());
+		PlayerPtr = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	}
 
 	return PlayerPtr;

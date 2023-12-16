@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponWheel.generated.h"
 
+class UTextBlock;
 class UImage;
 class UWeaponWheelItem;
 class APlayerCharacter;
@@ -26,6 +27,7 @@ protected:
 	void SetupBoundWidgets();
 	void SpawnIconWidgets();
 	void UpdateArrow();
+	void UpdateSelectedItem();
 
 public:
 	UPROPERTY(BlueprintReadOnly)
@@ -48,13 +50,28 @@ protected:
 	UPROPERTY(EditAnywhere, meta=(ClampMin = "0.0", ClampMax = "0.9"))
 	float ArrowPositionAsPercent = 0.5f;
 
+	UPROPERTY(EditAnywhere)
+	FVector2D NormalItemSize = FVector2D(125);
+
+	UPROPERTY(EditAnywhere)
+	FVector2D SelectedItemSize = FVector2D(140);
+	
+protected:
 	UPROPERTY(meta=(BindWidget))
 	UPanelWidget* WheelParent;
 
 	UPROPERTY(meta=(BindWidget))
 	UImage* ArrowImage;
+
+	UPROPERTY(meta=(BindWidget))
+	UImage* SelectedItemImage;
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* SelectedItemName;
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* SelectedItemDescription;
 	
-protected:
 	TArray<UWeaponWheelItem*> WheelItemPtrs;
 	
 	FVector2D HalfScreenSize = FVector2D::UnitVector;

@@ -8,6 +8,7 @@
 #include "WeaponWheelItem.h"
 #include "AbilitySystem/Player/PlayerCharacter.h"
 #include "Components/PanelWidget.h"
+#include "Components/TextBlock.h"
 
 void UWeaponWheel::NativeConstruct()
 {
@@ -124,7 +125,7 @@ void UWeaponWheel::SpawnIconWidgets()
 		}
 		
 		WheelItemPtrs.Add(NewObject<UWeaponWheelItem>(this, WheelItems[i]));
-		WheelItemPtrs.Last()->InitializeItem(WidgetTree, WheelParent, WidgetLocation);
+		WheelItemPtrs.Last()->InitializeItem(WidgetTree, WheelParent, WidgetLocation, NormalItemSize, SelectedItemSize);
 		
 		WidgetLocation = WidgetLocation.GetRotated(360.f / WheelItems.Num());
 	}
@@ -160,17 +161,41 @@ void UWeaponWheel::UpdateArrow()
 				}
 			}
 
-			// Highlight the correct wheel item
-			if (WheelItemPtrs.IsValidIndex(SelectedItemIndex))
-			{
-				if (LastSelectedItemIndex != SelectedItemIndex && WheelItemPtrs.IsValidIndex(LastSelectedItemIndex))
-				{
-					WheelItemPtrs[LastSelectedItemIndex]->ItemUnHover();
-				}
-					
-				WheelItemPtrs[SelectedItemIndex]->ItemHover();
-				LastSelectedItemIndex = SelectedItemIndex;
-			}
+			UpdateSelectedItem();
+		}
+	}
+}
+
+void UWeaponWheel::UpdateSelectedItem()
+{
+	if (LastSelectedItemIndex == SelectedItemIndex)
+	{
+		return;
+	}
+	
+	if (WheelItemPtrs.IsValidIndex(LastSelectedItemIndex) && IsValid(WheelItemPtrs[LastSelectedItemIndex]))
+	{
+		WheelItemPtrs[LastSelectedItemIndex]->ItemUnHover();
+	}
+
+	if (WheelItemPtrs.IsValidIndex(SelectedItemIndex) && IsValid(WheelItemPtrs[SelectedItemIndex]))
+	{
+		WheelItemPtrs[SelectedItemIndex]->ItemHover();
+		LastSelectedItemIndex = SelectedItemIndex;
+
+		if (IsValid(SelectedItemImage))
+		{
+			SelectedItemImage->SetBrushFromTexture(WheelItemPtrs[SelectedItemIndex]->GetNormalIcon());
+		}
+
+		if (IsValid(SelectedItemName))
+		{
+			SelectedItemName->SetText(FText::FromString(WheelItemPtrs[SelectedItemIndex]->GetItemName()));
+		}
+
+		if (IsValid(SelectedItemDescription))
+		{
+			SelectedItemDescription->SetText(FText::FromString(WheelItemPtrs[SelectedItemIndex]->GetItemDescription()));
 		}
 	}
 }
