@@ -24,13 +24,13 @@ public:
 	virtual void ItemUnHover();
 	virtual void ItemSelect();
 
+	// -- Helpers --
 	FVector2D GetPosition() const;
 	APlayerCharacter* GetPlayerPtr();
-
-	UTexture2D* GetNormalIcon() const { return NormalIcon; }
-	FString GetItemName() const { return ItemName; }
-	FString GetItemDescription() const { return ItemDescription; }
-	float GetAngleFromCenter() const { return FVector(GetPosition(), 0).Rotation().Yaw; }
+	UTexture2D* GetNormalIcon() const;
+	FString GetItemName() const;
+	FString GetItemDescription() const;
+	float GetAngleFromCenter() const;
 
 private:
 	UPROPERTY(EditAnywhere)

@@ -74,7 +74,7 @@ void UWeaponWheelItem::ItemUnHover()
 
 void UWeaponWheelItem::ItemSelect()
 {
-	
+	// By default does nothing
 }
 
 #pragma region Helpers
@@ -100,6 +100,26 @@ APlayerCharacter* UWeaponWheelItem::GetPlayerPtr()
 	}
 
 	return PlayerPtr;
+}
+
+UTexture2D* UWeaponWheelItem::GetNormalIcon() const
+{
+	return NormalIcon;
+}
+
+FString UWeaponWheelItem::GetItemName() const
+{
+	return ItemName;
+}
+
+FString UWeaponWheelItem::GetItemDescription() const
+{
+	return ItemDescription;
+}
+
+float UWeaponWheelItem::GetAngleFromCenter() const
+{
+	return FVector(GetPosition(), 0).Rotation().Yaw;
 }
 
 #pragma endregion
