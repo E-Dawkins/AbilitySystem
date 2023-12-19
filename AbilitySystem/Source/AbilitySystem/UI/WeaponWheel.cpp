@@ -9,7 +9,6 @@
 #include "AbilitySystem/Player/PlayerCharacter.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
-#include "Fonts/SlateFontInfo.h"
 
 void UWeaponWheel::NativeConstruct()
 {
@@ -17,9 +16,14 @@ void UWeaponWheel::NativeConstruct()
 
 	InitialWorldTimeDilation = GetWorld()->GetWorldSettings()->TimeDilation;
 
-	SetupPlayer();
+	GEngine->GameViewport->GetViewportSize(HalfScreenSize);
+	HalfScreenSize *= 0.5f;
+
+	PlayerPtr = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetCharacter());
+	
 	SetupBoundWidgets();
 	SpawnIconWidgets();
+	SetupPlayer();
 }
 
 void UWeaponWheel::NativeDestruct()
@@ -62,16 +66,14 @@ void UWeaponWheel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		InitialWorldTimeDilation = CurrentWorldTimeDilation;
 	}
 
-	if (ArrowImage)
+	if (IsValid(ArrowImage))
 	{
 		UpdateArrow();
 	}
 }
 
-void UWeaponWheel::SetupPlayer()
+void UWeaponWheel::SetupPlayer() const
 {
-	PlayerPtr = Cast<APlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetCharacter());
-
 	if (IsValid(PlayerPtr))
 	{
 		if (APlayerController* PC = Cast<APlayerController>(PlayerPtr->GetController()))
@@ -79,11 +81,7 @@ void UWeaponWheel::SetupPlayer()
 			PC->SetShowMouseCursor(true);
 			PC->SetIgnoreLookInput(true);
 			PC->SetInputMode(FInputModeGameAndUI());
-			
-			GEngine->GameViewport->GetViewportSize(HalfScreenSize);
-			HalfScreenSize *= 0.5f;
-		
-			PC->SetMouseLocation(HalfScreenSize.X, HalfScreenSize.Y * (1.f - RadiusAsPercent));
+			PC->SetMouseLocation(HalfScreenSize.X, HalfScreenSize.Y - HalfWheelSize.Y);
 		}
 	}
 }
@@ -92,60 +90,25 @@ void UWeaponWheel::SetupBoundWidgets()
 {
 	if (IsValid(WheelParent))
 	{
-		if (UCanvasPanelSlot* WheelParentSlot = Cast<UCanvasPanelSlot>(WheelParent->Slot))
+		if (const UCanvasPanelSlot* WheelParentSlot = Cast<UCanvasPanelSlot>(WheelParent->Slot))
 		{
-			WheelParentSlot->SetSize(FVector2D(HalfScreenSize.GetMin() * RadiusAsPercent * 2.f));
-			WheelParentSlot->SetAnchors(FAnchors(0.5f));
-			WheelParentSlot->SetAlignment(FVector2D(0.5f));
+			HalfWheelSize = WheelParentSlot->GetSize() * 0.5f;
 		}
 	}
 
 	if (IsValid(ArrowImage))
 	{
-		if (UCanvasPanelSlot* ArrowImageSlot = Cast<UCanvasPanelSlot>(ArrowImage->Slot))
+		if (const UCanvasPanelSlot* ArrowImageSlot = Cast<UCanvasPanelSlot>(ArrowImage->Slot))
 		{
-			ArrowImageSlot->SetAnchors(FAnchors(0.5f));
-			ArrowImageSlot->SetAlignment(FVector2D(0.5f));
-			
+			ArrowStartPosition = ArrowImageSlot->GetPosition();
 			UpdateArrow();
-		}
-	}
-
-	if (IsValid(SelectedItemImage))
-	{
-		if (UCanvasPanelSlot* SelectedItemImageSlot = Cast<UCanvasPanelSlot>(SelectedItemImage->Slot))
-		{
-			SelectedItemImageSlot->SetAnchors(FAnchors(0.5f, 0));
-			SelectedItemImageSlot->SetAlignment(FVector2D(0.5f, 0));
-			SelectedItemImageSlot->SetPosition(FVector2D(0, SI_Img_DistFromTop));
-			SelectedItemImageSlot->SetSize(SI_Img_Size);
-		}
-	}
-
-	if (IsValid(SelectedItemName))
-	{
-		if (UCanvasPanelSlot* SelectedItemNameSlot = Cast<UCanvasPanelSlot>(SelectedItemName->Slot))
-		{
-			SelectedItemNameSlot->SetAnchors(FAnchors(0.5f, 0));
-			SelectedItemNameSlot->SetAlignment(FVector2D(0.5f, 0));
-			SelectedItemNameSlot->SetPosition(FVector2D(0, SI_Name_DistFromTop));
-		}
-	}
-
-	if (IsValid(SelectedItemDescription))
-	{
-		if (UCanvasPanelSlot* SelectedItemDescriptionSlot = Cast<UCanvasPanelSlot>(SelectedItemDescription->Slot))
-		{
-			SelectedItemDescriptionSlot->SetAnchors(FAnchors(0.5f, 0));
-			SelectedItemDescriptionSlot->SetAlignment(FVector2D(0.5f, 0));
-			SelectedItemDescriptionSlot->SetPosition(FVector2D(0, SI_Desc_DistFromTop));
 		}
 	}
 }
 
 void UWeaponWheel::SpawnIconWidgets()
 {
-	FVector2D WidgetLocation = FVector2D(0, -HalfScreenSize.GetMin() * RadiusAsPercent);
+	FVector2D WidgetLocation = FVector2D(0, -HalfWheelSize.Y); // start from top-middle
 	
 	for (int i = 0; i < WheelItems.Num(); i++)
 	{
@@ -158,7 +121,7 @@ void UWeaponWheel::SpawnIconWidgets()
 		WheelItemPtrs.Add(NewObject<UWeaponWheelItem>(this, WheelItems[i]));
 		WheelItemPtrs.Last()->InitializeItem(WidgetTree, WheelParent, WidgetLocation, NormalItemSize, SelectedItemSize);
 		
-		WidgetLocation = WidgetLocation.GetRotated(360.f / WheelItems.Num());
+		WidgetLocation = WidgetLocation.GetSafeNormal().GetRotated(360.f / WheelItems.Num()) * HalfWheelSize;
 	}
 }
 
@@ -172,18 +135,19 @@ void UWeaponWheel::UpdateArrow()
 			const bool bMouseDevice = PC->GetMousePosition(DirToMouse.X, DirToMouse.Y);
 			DirToMouse = bMouseDevice ? (DirToMouse - HalfScreenSize).GetSafeNormal() : FVector2D(0, -1);
 			
-			ArrowImageSlot->SetPosition(DirToMouse * HalfScreenSize.GetMin() * ArrowPositionAsPercent);
+			ArrowImageSlot->SetPosition(DirToMouse * ArrowStartPosition.Size());
 			ArrowImage->SetRenderTransformAngle(FVector(DirToMouse, 0).Rotation().Yaw);
 			
 			float SmallestAngle = 360.f;
 				
 			for (int i = 0; i < WheelItemPtrs.Num(); i++)
 			{
-				const float AngleDiff = FMath::Abs(FVector(DirToMouse, 0).Rotation().Yaw - WheelItemPtrs[i]->GetAngleFromCenter());
-				
-				if (AngleDiff <= 120.f && AngleDiff <= SmallestAngle)
+				const float Dot = FVector2D::DotProduct(DirToMouse, WheelItemPtrs[i]->GetPosition().GetSafeNormal());
+				const float ACosD = FMath::RadiansToDegrees(FMath::Acos(Dot));
+
+				if (ACosD <= SmallestAngle)
 				{
-					SmallestAngle = AngleDiff;
+					SmallestAngle = ACosD;
 					SelectedItemIndex = i;
 				}
 			}

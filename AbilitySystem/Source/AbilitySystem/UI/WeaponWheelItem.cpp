@@ -117,9 +117,4 @@ FString UWeaponWheelItem::GetItemDescription() const
 	return ItemDescription;
 }
 
-float UWeaponWheelItem::GetAngleFromCenter() const
-{
-	return FVector(GetPosition(), 0).Rotation().Yaw;
-}
-
 #pragma endregion
