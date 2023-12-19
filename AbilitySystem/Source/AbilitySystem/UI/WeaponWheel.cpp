@@ -9,6 +9,7 @@
 #include "AbilitySystem/Player/PlayerCharacter.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+#include "Fonts/SlateFontInfo.h"
 
 void UWeaponWheel::NativeConstruct()
 {
@@ -89,7 +90,7 @@ void UWeaponWheel::SetupPlayer()
 
 void UWeaponWheel::SetupBoundWidgets()
 {
-	if (WheelParent)
+	if (IsValid(WheelParent))
 	{
 		if (UCanvasPanelSlot* WheelParentSlot = Cast<UCanvasPanelSlot>(WheelParent->Slot))
 		{
@@ -99,15 +100,45 @@ void UWeaponWheel::SetupBoundWidgets()
 		}
 	}
 
-	if (ArrowImage)
+	if (IsValid(ArrowImage))
 	{
 		if (UCanvasPanelSlot* ArrowImageSlot = Cast<UCanvasPanelSlot>(ArrowImage->Slot))
 		{
 			ArrowImageSlot->SetAnchors(FAnchors(0.5f));
 			ArrowImageSlot->SetAlignment(FVector2D(0.5f));
-			ArrowImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 			
 			UpdateArrow();
+		}
+	}
+
+	if (IsValid(SelectedItemImage))
+	{
+		if (UCanvasPanelSlot* SelectedItemImageSlot = Cast<UCanvasPanelSlot>(SelectedItemImage->Slot))
+		{
+			SelectedItemImageSlot->SetAnchors(FAnchors(0.5f, 0));
+			SelectedItemImageSlot->SetAlignment(FVector2D(0.5f, 0));
+			SelectedItemImageSlot->SetPosition(FVector2D(0, SI_Img_DistFromTop));
+			SelectedItemImageSlot->SetSize(SI_Img_Size);
+		}
+	}
+
+	if (IsValid(SelectedItemName))
+	{
+		if (UCanvasPanelSlot* SelectedItemNameSlot = Cast<UCanvasPanelSlot>(SelectedItemName->Slot))
+		{
+			SelectedItemNameSlot->SetAnchors(FAnchors(0.5f, 0));
+			SelectedItemNameSlot->SetAlignment(FVector2D(0.5f, 0));
+			SelectedItemNameSlot->SetPosition(FVector2D(0, SI_Name_DistFromTop));
+		}
+	}
+
+	if (IsValid(SelectedItemDescription))
+	{
+		if (UCanvasPanelSlot* SelectedItemDescriptionSlot = Cast<UCanvasPanelSlot>(SelectedItemDescription->Slot))
+		{
+			SelectedItemDescriptionSlot->SetAnchors(FAnchors(0.5f, 0));
+			SelectedItemDescriptionSlot->SetAlignment(FVector2D(0.5f, 0));
+			SelectedItemDescriptionSlot->SetPosition(FVector2D(0, SI_Desc_DistFromTop));
 		}
 	}
 }
