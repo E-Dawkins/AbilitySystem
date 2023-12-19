@@ -137,12 +137,9 @@ void UWeaponWheel::UpdateArrow()
 	{
 		if (const APlayerController* PC = Cast<APlayerController>(PlayerPtr->GetController()))
 		{
-			FVector2D MousePos;
-			const bool bIsMouseDevice = PC->GetMousePosition(MousePos.X, MousePos.Y);
-			MousePos = !bIsMouseDevice ? HalfScreenSize : MousePos;
-
-			FVector2D DirToMouse = (MousePos - HalfScreenSize).GetSafeNormal();
-			DirToMouse = DirToMouse.Equals(FVector2D::ZeroVector) ? FVector2D(0, -1) : DirToMouse;
+			FVector2D DirToMouse;
+			const bool bMouseDevice = PC->GetMousePosition(DirToMouse.X, DirToMouse.Y);
+			DirToMouse = bMouseDevice ? (DirToMouse - HalfScreenSize).GetSafeNormal() : FVector2D(0, -1);
 			
 			ArrowImageSlot->SetPosition(DirToMouse * HalfScreenSize.GetMin() * ArrowPositionAsPercent);
 			ArrowImage->SetRenderTransformAngle(FVector(DirToMouse, 0).Rotation().Yaw);
@@ -151,12 +148,11 @@ void UWeaponWheel::UpdateArrow()
 				
 			for (int i = 0; i < WheelItemPtrs.Num(); i++)
 			{
-				const float Dot = FVector2D::DotProduct(DirToMouse, WheelItemPtrs[i]->GetPosition().GetSafeNormal());
-				const float ACosD = FMath::RadiansToDegrees(FMath::Acos(Dot));
-
-				if (ACosD <= SmallestAngle)
+				const float AngleDiff = FMath::Abs(FVector(DirToMouse, 0).Rotation().Yaw - WheelItemPtrs[i]->GetAngleFromCenter());
+				
+				if (AngleDiff <= 120.f && AngleDiff <= SmallestAngle)
 				{
-					SmallestAngle = ACosD;
+					SmallestAngle = AngleDiff;
 					SelectedItemIndex = i;
 				}
 			}
@@ -168,7 +164,7 @@ void UWeaponWheel::UpdateArrow()
 
 void UWeaponWheel::UpdateSelectedItem()
 {
-	if (LastSelectedItemIndex == SelectedItemIndex)
+	if (LastSelectedItemIndex == SelectedItemIndex || WheelItemPtrs.Num() == 0)
 	{
 		return;
 	}

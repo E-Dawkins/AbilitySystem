@@ -30,6 +30,7 @@ public:
 	UTexture2D* GetNormalIcon() const { return NormalIcon; }
 	FString GetItemName() const { return ItemName; }
 	FString GetItemDescription() const { return ItemDescription; }
+	float GetAngleFromCenter() const { return FVector(GetPosition(), 0).Rotation().Yaw; }
 
 private:
 	UPROPERTY(EditAnywhere)
