@@ -81,7 +81,7 @@ void UWeaponWheelItem::ItemSelect()
 
 FVector2D UWeaponWheelItem::GetPosition() const
 {
-	if (IsValid(ImageWidget))
+	if (ImageWidget)
 	{
 		if (const UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(ImageWidget->Slot))
 		{
