@@ -31,11 +31,11 @@ public:
 	FString GetItemName() const;
 	FString GetItemDescription() const;
 
-private:
-	UPROPERTY(EditAnywhere)
+protected:
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bHideIconsInInspector", EditConditionHides))
 	UTexture2D* NormalIcon;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bHideIconsInInspector", EditConditionHides))
 	UTexture2D* SelectedIcon;
 
 	UPROPERTY(EditAnywhere)
@@ -44,7 +44,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString ItemDescription = "This is a short description for the selected item.";
 	
-private:
+protected:
+	UPROPERTY()
+	bool bHideIconsInInspector = false;
+	
 	UPROPERTY()
 	UImage* ImageWidget;
 

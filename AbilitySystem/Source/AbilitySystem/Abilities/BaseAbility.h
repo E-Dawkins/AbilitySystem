@@ -34,7 +34,7 @@ public:
 	UTexture2D* NormalIcon;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	UTexture2D* HighlightedIcon;
+	UTexture2D* SelectedIcon;
 	
 protected:
 	UPROPERTY()

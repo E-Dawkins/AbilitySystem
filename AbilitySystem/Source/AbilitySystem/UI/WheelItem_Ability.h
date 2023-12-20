@@ -15,7 +15,10 @@ class ABILITYSYSTEM_API UWheelItem_Ability : public UWeaponWheelItem
 {
 	GENERATED_BODY()
 
+	UWheelItem_Ability();
+
 public:
+	virtual void InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position, FVector2D _NormalSize, FVector2D _SelectedSize) override;
 	virtual void ItemSelect() override;
 
 private:

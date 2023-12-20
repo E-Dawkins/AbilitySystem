@@ -1,13 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Ab_Teleport.h"
-#include "DrawDebugHelpers.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "../_Misc/Helpers.h"
-#include "AbilitySystem/Player/PlayerCharacter.h"
+#include "Ab_FarReach.h"
 
-void UAb_Teleport::OnActivation(APlayerCharacter* _Player)
+#include "DrawDebugHelpers.h"
+#include "AbilitySystem/Player/PlayerCharacter.h"
+#include "AbilitySystem/_Misc/Helpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+void UAb_FarReach::OnActivation(APlayerCharacter* _Player)
 {
 	Super::OnActivation(_Player);
 
@@ -33,8 +34,10 @@ void UAb_Teleport::OnActivation(APlayerCharacter* _Player)
 	}
 }
 
-void UAb_Teleport::OnUse()
+void UAb_FarReach::OnUse()
 {
+	Super::OnUse();
+
 	if (!PlayerPtr)
 	{
 		return;
@@ -50,24 +53,17 @@ void UAb_Teleport::OnUse()
 	}
 
 	VelocityBeforeTp = PlayerPtr->GetVelocity();
-	PlayerPtr->GetCharacterMovement()->Velocity = FVector::ZeroVector;
 	
-	if (TeleportState == InstantKeepVelocity || TeleportState == InstantResetVelocity)
-	{
-		PlayerPtr->SetActorLocation(TeleportLocation);
-		PlayerPtr->GetCharacterMovement()->Velocity = VelocityBeforeTp.Size() * (TeleportState == InstantResetVelocity ? FVector::ZeroVector : PlayerPtr->GetControlRotation().Vector());
-
-		OnDeactivation();
-	}
-	else if (TeleportState == SweepResetVelocity || TeleportState == SweepKeepVelocity)
-	{
-		bIsSweeping = true;
-		PlayerPtr->GetCharacterMovement()->GravityScale = 0;
-	}
+	PlayerPtr->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	PlayerPtr->GetCharacterMovement()->GravityScale = 0;
+	
+	bIsSweeping = true;
 }
 
-void UAb_Teleport::Update(float _DeltaSeconds)
+void UAb_FarReach::Update(float _DeltaSeconds)
 {
+	Super::Update(_DeltaSeconds);
+
 	if (!PlayerPtr)
 	{
 		return;
@@ -79,7 +75,7 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 	}
 	else
 	{
-		GetTeleportVariables();
+		UpdateTeleportVariables();
 	}
 	
 	if (NormalCursorPtr)
@@ -101,7 +97,7 @@ void UAb_Teleport::Update(float _DeltaSeconds)
 	}
 }
 
-void UAb_Teleport::OnDeactivation()
+void UAb_FarReach::OnDeactivation()
 {
 	Super::OnDeactivation();
 
@@ -128,7 +124,7 @@ void UAb_Teleport::OnDeactivation()
 	}
 }
 
-void UAb_Teleport::GetTeleportVariables()
+void UAb_FarReach::UpdateTeleportVariables()
 {
 	bCanMantle = false;
 	bShouldCrouch = false;
@@ -156,7 +152,7 @@ void UAb_Teleport::GetTeleportVariables()
 	}
 }
 
-bool UAb_Teleport::InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHit) const
+bool UAb_FarReach::InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHit) const
 {
 	FVector TraceStart;
 	FRotator TraceDirection;
@@ -186,7 +182,7 @@ bool UAb_Teleport::InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHi
 	return bInitialTraceResult;
 }
 
-void UAb_Teleport::MantleTrace(const FHitResult _InitialTraceHit, FVector& _TeleportLocation)
+void UAb_FarReach::MantleTrace(const FHitResult _InitialTraceHit, FVector& _TeleportLocation)
 {
 	const bool bMantleAble = FMath::Abs(FVector::DotProduct(FVector::UpVector, _InitialTraceHit.ImpactNormal)) <= WallDotTolerance;
 
@@ -232,7 +228,7 @@ void UAb_Teleport::MantleTrace(const FHitResult _InitialTraceHit, FVector& _Tele
 	}
 }
 
-bool UAb_Teleport::CheckHeadRoom(FVector& _TeleportLocation)
+bool UAb_FarReach::CheckHeadRoom(FVector& _TeleportLocation)
 {
 	FVector DepenetrationVector;
 	const FVector TpLocationNoOffset = _TeleportLocation;
@@ -271,15 +267,17 @@ bool UAb_Teleport::CheckHeadRoom(FVector& _TeleportLocation)
 	return bCanTeleport;
 }
 
-void UAb_Teleport::SweepTowards()
+void UAb_FarReach::SweepTowards()
 {
 	PlayerPtr->SetActorLocation(FHelpers::MoveTowards(PlayerPtr->GetActorLocation(), TeleportLocation, SweepStepSize));
 	
 	if (PlayerPtr->GetActorLocation().Equals(TeleportLocation)) // reached tp location
 	{
 		bIsSweeping = false;
-		PlayerPtr->GetCharacterMovement()->Velocity = VelocityBeforeTp.Size() * (TeleportState == SweepResetVelocity ? FVector::ZeroVector : PlayerPtr->GetControlRotation().Vector());
 		PlayerPtr->GetCharacterMovement()->GravityScale = 1;
+		
+		const float ClampedVelocity = FMath::Clamp(VelocityBeforeTp.Size(), MinExitVelocity, MaxExitVelocity);
+		PlayerPtr->GetCharacterMovement()->Velocity = ClampedVelocity * PlayerPtr->GetControlRotation().Vector();
 
 		OnDeactivation();
 	}
