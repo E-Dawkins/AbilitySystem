@@ -8,24 +8,8 @@
 #include "AbilitySystem/_Misc/Helpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-void UAb_FarReach::OnUse()
+void UAb_FarReach::OnUseEnd()
 {
-	Super::OnUse();
-
-	if (!PlayerPtr)
-	{
-		return;
-	}
-
-	// Disable player input / collision temporarily
-	PlayerPtr->DisableInput(PlayerPtr->GetController<APlayerController>());
-	PlayerPtr->SetActorEnableCollision(false);
-	
-	if (bShouldCrouch)
-	{
-		PlayerPtr->Crouch();
-	}
-
 	VelocityBeforeTp = PlayerPtr->GetVelocity();
 	
 	PlayerPtr->GetCharacterMovement()->Velocity = FVector::ZeroVector;

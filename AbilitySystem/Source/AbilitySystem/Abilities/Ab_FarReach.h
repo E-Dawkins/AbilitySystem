@@ -3,19 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TeleportAbility.h"
+#include "Ab_Blink.h"
 #include "Ab_FarReach.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ABILITYSYSTEM_API UAb_FarReach : public UTeleportAbility
+class ABILITYSYSTEM_API UAb_FarReach : public UAb_Blink
 {
 	GENERATED_BODY()
 
 public:
-	virtual void OnUse() override;
+	virtual void OnUseEnd() override;
 	virtual void Update(float _DeltaSeconds) override;
 
 	virtual bool InitialTrace(FVector& _TeleportLocation, FHitResult& _TraceHit, APlayerCharacter* _PlayerPtr) const override;
