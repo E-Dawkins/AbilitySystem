@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class UBaseInteractable;
 class UPlayerHUD;
 class UWeaponWheel;
 
@@ -35,6 +36,8 @@ private:
 	void OnAbilityActivated();
 	void OpenWeaponWheel();
 	void CloseWeaponWheel();
+
+	void CheckForInteractable();
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -65,6 +68,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character")
 	TSubclassOf<UPlayerHUD> PlayerHUDClass;
 
+	UPROPERTY(EditAnywhere, Category = "Character")
+	float InteractionRange = 500.f;
+
 private:
 	bool bIsSprinting = false;
 
@@ -73,5 +79,8 @@ private:
 
 	UPROPERTY()
 	UPlayerHUD* PlayerHUDPtr = nullptr;
+
+	UPROPERTY()
+	UBaseInteractable* CurrentInteractable = nullptr;
 
 };

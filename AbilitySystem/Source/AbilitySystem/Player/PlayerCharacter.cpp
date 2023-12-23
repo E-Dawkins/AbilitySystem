@@ -4,6 +4,7 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "../Abilities/BaseAbility.h"
+#include "AbilitySystem/Interactables/BaseInteractable.h"
 #include "AbilitySystem/UI/PlayerHUD.h"
 #include "AbilitySystem/UI/WeaponWheel.h"
 
@@ -37,6 +38,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		CurrentAbility.GetDefaultObject()->Update(DeltaTime);
 	}
+
+	CheckForInteractable();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -148,6 +151,43 @@ void APlayerCharacter::CloseWeaponWheel()
 	if (IsValid(WeaponWheelPtr))
 	{
 		WeaponWheelPtr->RemoveFromViewport();
+	}
+}
+
+void APlayerCharacter::CheckForInteractable()
+{
+	FHitResult Hit;
+
+	FVector TraceStart;
+	FRotator TraceDirection;
+	GetActorEyesViewPoint(TraceStart, TraceDirection);
+
+	const bool bTraceHit = GetWorld()->LineTraceSingleByChannel
+	(
+		Hit,
+		TraceStart,
+		TraceStart + TraceDirection.Vector() * InteractionRange,
+		ECC_Visibility
+	);
+
+	if (bTraceHit)
+	{
+		UBaseInteractable* HitInteractable = Hit.GetActor()->FindComponentByClass<UBaseInteractable>();
+		
+		if (HitInteractable != CurrentInteractable)
+		{
+			if (IsValid(CurrentInteractable))
+			{
+				CurrentInteractable->OnUnHover();	
+			}
+			
+			CurrentInteractable = HitInteractable;
+
+			if (IsValid(CurrentInteractable))
+			{
+				CurrentInteractable->OnHover();
+			}
+		}
 	}
 }
 
