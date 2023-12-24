@@ -134,6 +134,21 @@ FVector FHelpers::MoveTowards(FVector _Current, FVector _Target, float _MaxDista
 	return _Current + Direction.GetSafeNormal() * _MaxDistanceDelta;
 }
 
+FRotator FHelpers::MoveTowards(FRotator _Current, FRotator _Target, float _MaxDistanceDelta)
+{
+	const FRotator Direction = _Target - _Current;
+	const float Magnitude = Direction.Euler().Size();
+
+	GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Purple, FString::Printf(TEXT("Mag: %f"), Magnitude));
+	
+	if (Magnitude <= _MaxDistanceDelta || Magnitude == 0.f)
+	{
+		return _Target;
+	}
+
+	return _Current + Direction * _MaxDistanceDelta;
+}
+
 void FHelpers::SetGlobalDilation(const UWorld* _World, float _NewDilation, bool _bStopPlayerInputForFrame)
 {
 	if (!_World)

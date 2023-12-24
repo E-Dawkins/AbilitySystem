@@ -190,7 +190,7 @@ void APlayerCharacter::CheckForInteractable()
 
 	if (bTraceHit)
 	{
-		UBaseInteractable* HitInteractable = Hit.GetActor()->FindComponentByClass<UBaseInteractable>();
+		ABaseInteractable* HitInteractable = Cast<ABaseInteractable>(Hit.GetActor());
 		
 		if (HitInteractable != CurrentInteractable)
 		{

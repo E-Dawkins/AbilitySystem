@@ -3,13 +3,13 @@
 
 #include "BaseInteractable.h"
 
-// Sets default values for this component's properties
-UBaseInteractable::UBaseInteractable()
+ABaseInteractable::ABaseInteractable()
 {
-	
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh"));
+	SetRootComponent(StaticMesh);
 }
 
-bool UBaseInteractable::OnHover()
+bool ABaseInteractable::OnHover()
 {
 	if (!bCanInteract)
 	{
@@ -22,7 +22,7 @@ bool UBaseInteractable::OnHover()
 	return true;
 }
 
-bool UBaseInteractable::OnUnHover()
+bool ABaseInteractable::OnUnHover()
 {
 	// GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString("On Un-Hover"));
 	bHovered = false;
@@ -35,7 +35,7 @@ bool UBaseInteractable::OnUnHover()
 	return true;
 }
 
-bool UBaseInteractable::StartInteract()
+bool ABaseInteractable::StartInteract()
 {
 	if (!bCanInteract)
 	{
@@ -48,7 +48,7 @@ bool UBaseInteractable::StartInteract()
 	return true;
 }
 
-bool UBaseInteractable::EndInteract()
+bool ABaseInteractable::EndInteract()
 {
 	if (!bInteractedWith)
 	{

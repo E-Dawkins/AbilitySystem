@@ -7,7 +7,7 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
-class UBaseInteractable;
+class ABaseInteractable;
 class UPlayerHUD;
 class UWeaponWheel;
 
@@ -83,6 +83,6 @@ private:
 	UPlayerHUD* PlayerHUDPtr = nullptr;
 
 	UPROPERTY()
-	UBaseInteractable* CurrentInteractable = nullptr;
+	ABaseInteractable* CurrentInteractable = nullptr;
 
 };
