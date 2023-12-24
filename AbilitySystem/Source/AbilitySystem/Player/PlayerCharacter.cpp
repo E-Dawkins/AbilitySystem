@@ -55,6 +55,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction(TEXT("AbilityUse"), IE_Released, this, &APlayerCharacter::OnAbilityUsed);
 	PlayerInputComponent->BindAction(TEXT("WeaponWheelUse"), IE_Pressed, this, &APlayerCharacter::OpenWeaponWheel);
 	PlayerInputComponent->BindAction(TEXT("WeaponWheelUse"), IE_Released, this, &APlayerCharacter::CloseWeaponWheel);
+	PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &APlayerCharacter::StartInteract);
+	PlayerInputComponent->BindAction(TEXT("Interact"), IE_Released, this, &APlayerCharacter::EndInteract);
 
 	// Axis
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &APlayerCharacter::MoveForward);
@@ -154,6 +156,22 @@ void APlayerCharacter::CloseWeaponWheel()
 	}
 }
 
+void APlayerCharacter::StartInteract()
+{
+	if (IsValid(CurrentInteractable))
+	{
+		CurrentInteractable->StartInteract();
+	}
+}
+
+void APlayerCharacter::EndInteract()
+{
+	if (IsValid(CurrentInteractable))
+	{
+		CurrentInteractable->EndInteract();
+	}
+}
+
 void APlayerCharacter::CheckForInteractable()
 {
 	FHitResult Hit;
@@ -178,7 +196,7 @@ void APlayerCharacter::CheckForInteractable()
 		{
 			if (IsValid(CurrentInteractable))
 			{
-				CurrentInteractable->OnUnHover();	
+				CurrentInteractable->OnUnHover();
 			}
 			
 			CurrentInteractable = HitInteractable;

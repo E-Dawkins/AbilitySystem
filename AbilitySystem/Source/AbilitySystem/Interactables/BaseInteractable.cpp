@@ -9,17 +9,54 @@ UBaseInteractable::UBaseInteractable()
 	
 }
 
-void UBaseInteractable::OnHover()
+bool UBaseInteractable::OnHover()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString("On Hover"));
+	if (!bCanInteract)
+	{
+		return false;
+	}
+	
+	// GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString("On Hover"));
+	bHovered = true;
+
+	return true;
 }
 
-void UBaseInteractable::OnUnHover()
+bool UBaseInteractable::OnUnHover()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString("On Un-Hover"));
+	// GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString("On Un-Hover"));
+	bHovered = false;
+
+	if (bInteractedWith)
+	{
+		EndInteract();
+	}
+
+	return true;
 }
 
-void UBaseInteractable::StartInteract()
+bool UBaseInteractable::StartInteract()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Purple, FString("Started Interaction"));
+	if (!bCanInteract)
+	{
+		return false;
+	}
+	
+	// GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Purple, FString("Started Interaction"));
+	bInteractedWith = true;
+
+	return true;
+}
+
+bool UBaseInteractable::EndInteract()
+{
+	if (!bInteractedWith)
+	{
+		return false;
+	}
+	
+	// GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Purple, FString("Ended Interaction"));
+	bInteractedWith = false;
+
+	return true;
 }

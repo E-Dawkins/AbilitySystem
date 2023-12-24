@@ -36,6 +36,8 @@ private:
 	void OnAbilityActivated();
 	void OpenWeaponWheel();
 	void CloseWeaponWheel();
+	void StartInteract();
+	void EndInteract();
 
 	void CheckForInteractable();
 

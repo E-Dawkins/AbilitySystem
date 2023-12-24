@@ -17,9 +17,19 @@ public:
 	UBaseInteractable();
 
 public:
-	virtual void OnHover();
-	virtual void OnUnHover();
-	virtual void StartInteract();
+	virtual bool OnHover();
+	virtual bool OnUnHover();
+	virtual bool StartInteract();
+	virtual bool EndInteract();
 
+public:
+	bool GetHoveredState() const { return bHovered; }
+	bool GetInteractionState() const { return bInteractedWith; }
+
+protected:
+	bool bHovered = false;
+	bool bInteractedWith = false;
+
+	bool bCanInteract = true;
 		
 };
