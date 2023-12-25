@@ -5,8 +5,10 @@
 
 ABaseInteractable::ABaseInteractable()
 {
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh"));
-	SetRootComponent(StaticMesh);
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
+	SetRootComponent(RootSceneComponent);
 }
 
 bool ABaseInteractable::OnHover()

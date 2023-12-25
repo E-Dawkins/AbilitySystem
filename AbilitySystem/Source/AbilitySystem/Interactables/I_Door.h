@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseInteractable.h"
+#include "Components/TimelineComponent.h"
 #include "I_Door.generated.h"
 
 /**
@@ -15,31 +16,34 @@ class ABILITYSYSTEM_API AI_Door : public ABaseInteractable
 	GENERATED_BODY()
 
 public:
+	AI_Door();
+	
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	
 	virtual bool StartInteract() override;
 
-	void AnimateDoor();
-
 private:
+	UPROPERTY(VisibleDefaultsOnly)
+	UStaticMeshComponent* DoorMesh;
+	
 	// Can the door be toggled between open and closed?
 	// Or can it only be opened once?
 	UPROPERTY(EditAnywhere, Category = "Door")
 	bool bToggleable = true;
 	
 	UPROPERTY(EditAnywhere, Category = "Door")
-	FVector OpenAnglePerAxis = FVector(0, 0, 90);
+	FRotator AnglePerAxis = FRotator(0, 90, 0);
 
-	UPROPERTY(EditAnywhere, Category = "Door", meta=(ClampMin = "0.001"))
-	float DoorOpenSpeed = 0.001f;
+	UPROPERTY(EditAnywhere, Category = "Door", meta=(ClampMin = "0.1"))
+	float DoorOpenTime = 0.3f;
 	
 private:
 	bool bDoorOpen = false;
-	bool bDoorAnimating = false;
 
 	FRotator StartRotation;
 	FRotator EndRotation;
 
-	FRotator TargetRotation;
+	FTimeline DoorTimeline;
 	
 };

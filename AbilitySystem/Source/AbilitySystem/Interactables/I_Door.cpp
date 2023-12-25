@@ -3,60 +3,63 @@
 
 #include "I_Door.h"
 
-#include "AbilitySystem/_Misc/Helpers.h"
+AI_Door::AI_Door()
+{
+	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Door Mesh"));
+	DoorMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+}
 
 void AI_Door::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FRotator TempStartRotation = StaticMesh->GetComponentRotation();
-	StartRotation = TempStartRotation;
-	EndRotation = TempStartRotation.Add(OpenAnglePerAxis.X, OpenAnglePerAxis.Y, OpenAnglePerAxis.Z); // this changes original variable
+	StartRotation = GetActorRotation();
+	DoorTimeline.SetTimelineLengthMode(TL_TimelineLength);
+}
+
+void AI_Door::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (DoorTimeline.GetTimelineLength() != DoorOpenTime)
+	{
+		DoorTimeline.SetTimelineLength(DoorOpenTime);
+	}
+
+	const FRotator NewEndRotation = StartRotation + AnglePerAxis;
+	if (EndRotation != NewEndRotation)
+	{
+		EndRotation = NewEndRotation;
+	}
+	
+	DoorTimeline.TickTimeline(DeltaSeconds);
+
+	const float LerpAlpha = DoorTimeline.GetPlaybackPosition() / DoorTimeline.GetTimelineLength();
+	const FRotator NewDoorRotation = FMath::Lerp(StartRotation, EndRotation, LerpAlpha);
+
+	if (!GetActorRotation().Equals(NewDoorRotation))
+	{
+		SetActorRotation(NewDoorRotation);
+	}
 }
 
 bool AI_Door::StartInteract()
 {
-	if (!Super::StartInteract())
-	{
-		return false;
-	}
-
-	if (bDoorOpen && !bToggleable)
-	{
-		return false;
-	}
-
-	if (bDoorAnimating)
+	if (!Super::StartInteract() || (bDoorOpen && !bToggleable))
 	{
 		return false;
 	}
 	
 	bDoorOpen = !bDoorOpen;
-	TargetRotation = bDoorOpen ? EndRotation : StartRotation;
 
-	AnimateDoor();
-	
-	return true;
-}
-
-void AI_Door::AnimateDoor()
-{
-	bDoorAnimating = true;
-	
-	const FRotator Current = FHelpers::MoveTowards(StaticMesh->GetComponentRotation(), TargetRotation, DoorOpenSpeed);
-	StaticMesh->SetWorldRotation(Current);
-	
-	if (!Current.Equals(TargetRotation, DoorOpenSpeed))
+	if (bDoorOpen)
 	{
-		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &AI_Door::AnimateDoor);
-
-		GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString("Door animating"));
-		GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Purple, FString::Printf(TEXT("Current: %s"), *Current.ToString()));
-		GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Purple, FString::Printf(TEXT("Target: %s"), *TargetRotation.ToString()));
+		DoorTimeline.Play();
 	}
 	else
 	{
-		bDoorAnimating = false;
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString("Door not animating"));
+		DoorTimeline.Reverse();
 	}
+	
+	return true;
 }

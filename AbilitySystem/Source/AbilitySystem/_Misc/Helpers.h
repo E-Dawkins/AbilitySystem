@@ -66,7 +66,5 @@ public:
 
 	static FVector MoveTowards(FVector _Current, FVector _Target, float _MaxDistanceDelta);
 
-	static FRotator MoveTowards(FRotator _Current, FRotator _Target, float _MaxDistanceDelta);
-
 	static void SetGlobalDilation(const UWorld* _World, float _NewDilation, bool _bStopPlayerInputForFrame = true);
 };
