@@ -43,9 +43,9 @@ void AI_Door::Tick(float DeltaSeconds)
 	}
 }
 
-bool AI_Door::StartInteract()
+bool AI_Door::StartInteract(APlayerCharacter* _PlayerPtr)
 {
-	if (!Super::StartInteract() || (bDoorOpen && !bToggleable))
+	if (!Super::StartInteract(_PlayerPtr) || (bDoorOpen && !bToggleable))
 	{
 		return false;
 	}

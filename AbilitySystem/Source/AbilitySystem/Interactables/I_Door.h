@@ -21,7 +21,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	
-	virtual bool StartInteract() override;
+	virtual bool StartInteract(APlayerCharacter* _PlayerPtr) override;
 
 private:
 	UPROPERTY(VisibleDefaultsOnly)

@@ -160,7 +160,7 @@ void APlayerCharacter::StartInteract()
 {
 	if (IsValid(CurrentInteractable))
 	{
-		CurrentInteractable->StartInteract();
+		CurrentInteractable->StartInteract(this);
 	}
 }
 
@@ -206,6 +206,10 @@ void APlayerCharacter::CheckForInteractable()
 				CurrentInteractable->OnHover();
 			}
 		}
+	}
+	else // nothing hit, nullify the current interactable
+	{
+		CurrentInteractable = nullptr;
 	}
 }
 

@@ -6,6 +6,8 @@
 #include "BaseInteractable.generated.h"
 
 
+class APlayerCharacter;
+
 UCLASS()
 class ABILITYSYSTEM_API ABaseInteractable : public AActor
 {
@@ -16,7 +18,7 @@ public:
 	
 	virtual bool OnHover();
 	virtual bool OnUnHover();
-	virtual bool StartInteract();
+	virtual bool StartInteract(APlayerCharacter* _PlayerPtr);
 	virtual bool EndInteract();
 
 public:
@@ -32,5 +34,7 @@ protected:
 	bool bInteractedWith = false;
 
 	bool bCanInteract = true;
-		
+
+	UPROPERTY()
+	APlayerCharacter* PlayerPtr;
 };

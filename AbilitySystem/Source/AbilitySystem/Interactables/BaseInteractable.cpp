@@ -3,6 +3,8 @@
 
 #include "BaseInteractable.h"
 
+#include "AbilitySystem/Player/PlayerCharacter.h"
+
 ABaseInteractable::ABaseInteractable()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -37,12 +39,14 @@ bool ABaseInteractable::OnUnHover()
 	return true;
 }
 
-bool ABaseInteractable::StartInteract()
+bool ABaseInteractable::StartInteract(APlayerCharacter* _PlayerPtr)
 {
-	if (!bCanInteract)
+	if (!bCanInteract || !IsValid(_PlayerPtr))
 	{
 		return false;
 	}
+
+	PlayerPtr = _PlayerPtr;
 	
 	// GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Purple, FString("Started Interaction"));
 	bInteractedWith = true;
