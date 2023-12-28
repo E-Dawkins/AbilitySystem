@@ -19,13 +19,16 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 	
-	void Pickup();
-	void Throw();
+	void Pickup() const;
+	void Throw(bool _bWithForce = true) const;
 
 protected:
 	// How far in front of the player to 'hold' the object
 	UPROPERTY(EditAnywhere, Category = "Throwable")
-	FVector HeldOffset = FVector(0, 50, 0);
+	float HeldOffset = 150.f;
+
+	UPROPERTY(EditAnywhere, Category = "Throwable")
+	float ThrowForce = 5000.f;
 	
 protected:
 	bool bHeld = false;

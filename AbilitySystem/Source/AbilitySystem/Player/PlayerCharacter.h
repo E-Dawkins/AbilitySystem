@@ -51,6 +51,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UPlayerHUD* GetPlayerHUD() const {return PlayerHUDPtr; }
 
+	UFUNCTION(BlueprintCallable)
+	float GetInteractionRange() const { return InteractionRange; }
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
 	float MaxWalkSpeed = 600.f;

@@ -32,26 +32,33 @@ void AI_Throwable::Tick(float DeltaSeconds)
 
 	if (bHeld)
 	{
-		FVector RightOffset = PlayerPtr->GetActorForwardVector() * HeldOffset.X;
-		FVector ForwardOffset = PlayerPtr->GetActorForwardVector() * HeldOffset.Y;
-		FVector UpOffset = PlayerPtr->GetActorUpVector() * HeldOffset.Y;
-		FVector NewLocation = PlayerPtr->GetActorLocation() + RightOffset + ForwardOffset + UpOffset;
-		bool bSuccess = TeleportTo(NewLocation, GetActorRotation());
-		GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString::Printf(TEXT("New Location: %s"), *NewLocation.ToString()));
+		FVector ViewLocation;
+		FRotator ViewRotation;
+		PlayerPtr->GetActorEyesViewPoint(ViewLocation, ViewRotation);
 
-		if (bSuccess)
+		const FVector NewLocation = ViewLocation + ViewRotation.Vector() * HeldOffset;
+		SetActorLocation(NewLocation, true);
+
+		// If held and outside player interaction range, just drop the object
+		if (FVector::Dist(ViewLocation, GetActorLocation()) > PlayerPtr->GetInteractionRange())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, -1, FColor::Green, FString("Success"));
+			Throw(false);
+			bHeld = false;
 		}
 	}
 }
 
-void AI_Throwable::Pickup()
+void AI_Throwable::Pickup() const
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString("Pickup"));
+	RootMesh->SetSimulatePhysics(false);
 }
 
-void AI_Throwable::Throw()
+void AI_Throwable::Throw(bool _bWithForce) const
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString("Throw"));
+	RootMesh->SetSimulatePhysics(true);
+
+	if (_bWithForce)
+	{
+		RootMesh->AddImpulse(PlayerPtr->GetViewRotation().Vector() * ThrowForce, NAME_None, false);
+	}
 }

@@ -27,7 +27,7 @@ public:
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly)
-	USceneComponent* RootSceneComponent;
+	UStaticMeshComponent* RootMesh;
 	
 protected:
 	bool bHovered = false;

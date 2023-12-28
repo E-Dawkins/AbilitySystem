@@ -24,9 +24,6 @@ public:
 	virtual bool StartInteract(APlayerCharacter* _PlayerPtr) override;
 
 private:
-	UPROPERTY(VisibleDefaultsOnly)
-	UStaticMeshComponent* DoorMesh;
-	
 	// Can the door be toggled between open and closed?
 	// Or can it only be opened once?
 	UPROPERTY(EditAnywhere, Category = "Door")

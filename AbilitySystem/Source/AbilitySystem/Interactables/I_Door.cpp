@@ -5,8 +5,7 @@
 
 AI_Door::AI_Door()
 {
-	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Door Mesh"));
-	DoorMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	
 }
 
 void AI_Door::BeginPlay()
