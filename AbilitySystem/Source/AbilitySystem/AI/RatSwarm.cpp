@@ -4,6 +4,7 @@
 #include "RatSwarm.h"
 
 #include "AIController.h"
+#include "EnemyManager.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -21,7 +22,12 @@ void ARatSwarm::BeginPlay()
 		{
 			AIController->RunBehaviorTree(AIBehavior);
 
-			AIController->GetBlackboardComponent()->SetValueAsVector(TEXT("VectorKey"), GetActorLocation() + FVector(0, 5000, 0));
+			AActor* ClosestEnemy = GetWorld()->GetSubsystem<UEnemyManager>()->GetClosestEnemy(GetActorLocation());
+
+			if (IsValid(ClosestEnemy))
+			{
+				AIController->GetBlackboardComponent()->SetValueAsVector(TEXT("VectorKey"), ClosestEnemy->GetActorLocation());
+			}
 		}
 	}
 }
