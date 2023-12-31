@@ -19,7 +19,7 @@ public:
 	
 	void ManagerInit(const UWorld::FActorsInitializedParams& _Params);
 
-	AActor* GetClosestEnemy(FVector _Point);
+	void GetClosestEnemy(FVector _Point, AActor*& _ClosestEnemy, float& _Distance);
 	
 private:
 	UPROPERTY()

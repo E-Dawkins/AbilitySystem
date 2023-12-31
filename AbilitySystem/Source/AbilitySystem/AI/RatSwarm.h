@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "RatSwarm.generated.h"
 
+class UNiagaraComponent;
 class AAIController;
 class UBehaviorTree;
 
@@ -19,13 +20,23 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 public:
 	UPROPERTY(VisibleDefaultsOnly)
 	UStaticMeshComponent* StaticMesh = nullptr;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	UNiagaraComponent* RatSwarmSystem = nullptr;
 	
 	UPROPERTY(EditAnywhere)
 	UBehaviorTree* AIBehavior = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	float EnemyDamagePerSecond = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	float DamageRadius = 150.f;
 
 private:
 	UPROPERTY()

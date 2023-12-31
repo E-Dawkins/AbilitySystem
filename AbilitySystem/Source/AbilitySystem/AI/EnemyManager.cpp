@@ -19,21 +19,19 @@ void UEnemyManager::ManagerInit(const UWorld::FActorsInitializedParams& _Params)
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseEnemy::StaticClass(), AllEnemies);
 }
 
-AActor* UEnemyManager::GetClosestEnemy(FVector _Point)
+void UEnemyManager::GetClosestEnemy(FVector _Point, AActor*& _ClosestEnemy, float& _Distance)
 {
-	AActor* Closest = nullptr;
-	float ClosestDist = 0.f;
+	_ClosestEnemy = nullptr;
+	_Distance = -1.f;
 	
 	for (AActor* Enemy : AllEnemies)
 	{
 		const float CurDist = FVector::Dist(_Point, Enemy->GetActorLocation());
 
-		if (!IsValid(Closest) || CurDist < ClosestDist)
+		if (!IsValid(_ClosestEnemy) || CurDist < _Distance)
 		{
-			Closest = Enemy;
-			ClosestDist = CurDist;
+			_ClosestEnemy = Enemy;
+			_Distance = CurDist;
 		}
 	}
-
-	return Closest;
 }

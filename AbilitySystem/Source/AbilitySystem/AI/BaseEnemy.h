@@ -17,4 +17,17 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+public:
+	virtual void Tick(float DeltaSeconds) override;
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	void Die();
+
+public:
+	bool IsAlive() const { return Health > 0.f; }
+
+private:
+	UPROPERTY(EditAnywhere, Category = "Base Enemy")
+	float Health = 100.f;
+
 };
