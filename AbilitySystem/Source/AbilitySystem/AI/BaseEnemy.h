@@ -20,8 +20,9 @@ protected:
 public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
-	void Die();
+	
+	void OnDeath();
+	void OnCorpseDeath();
 
 public:
 	bool IsAlive() const { return Health > 0.f; }
@@ -29,5 +30,11 @@ public:
 private:
 	UPROPERTY(EditAnywhere, Category = "Base Enemy")
 	float Health = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "Base Enemy")
+	float CorpseHealth = 50.f;
+
+	bool bIsDead = false;
+	bool bIsCorpseDead = false;
 
 };

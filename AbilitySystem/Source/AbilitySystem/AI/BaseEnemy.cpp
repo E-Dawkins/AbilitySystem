@@ -20,9 +20,14 @@ void ABaseEnemy::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (Health <= 0.f)
+	if (Health <= 0.f && !bIsDead)
 	{
-		Die();
+		OnDeath();
+	}
+
+	if (CorpseHealth <= 0.f && !bIsCorpseDead)
+	{
+		OnCorpseDeath();
 	}
 }
 
@@ -30,13 +35,27 @@ float ABaseEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
 	AActor* DamageCauser)
 {
 	Health -= DamageAmount;
+
+	if (Health <= 0.f)
+	{
+		CorpseHealth -= DamageAmount;
+	}
 	
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
-void ABaseEnemy::Die()
+void ABaseEnemy::OnDeath()
 {
+	bIsDead = true;
+	
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ABaseEnemy::OnCorpseDeath()
+{
+	bIsCorpseDead = true;
+	
+	Destroy();
 }
 
