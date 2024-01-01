@@ -26,6 +26,11 @@ void UEnemyManager::GetClosestEnemy(FVector _Point, AActor*& _ClosestEnemy, floa
 	
 	for (AActor* Enemy : AllEnemies)
 	{
+		if (!IsValid(Enemy))
+		{
+			continue;
+		}
+		
 		const float CurDist = FVector::Dist(_Point, Enemy->GetActorLocation());
 
 		if (!IsValid(_ClosestEnemy) || CurDist < _Distance)

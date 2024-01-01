@@ -20,7 +20,7 @@ public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Random Nav Point In Radius")
 	FBlackboardKeySelector NavPoint;
 	
 	UPROPERTY(EditAnywhere, Category = "Random Nav Point In Radius")

@@ -10,7 +10,7 @@ class UNiagaraComponent;
 class AAIController;
 class UBehaviorTree;
 
-UCLASS()
+UCLASS(HideCategories = (Character,Camera,Replication,Rendering,Collision,Actor,Input,LOD,Cooking))
 class ABILITYSYSTEM_API ARatSwarm : public ACharacter
 {
 	GENERATED_BODY()

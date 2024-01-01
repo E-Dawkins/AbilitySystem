@@ -35,17 +35,8 @@ void ARatSwarm::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	AActor* ClosestEnemy;
-	float Distance;
-	GetWorld()->GetSubsystem<UEnemyManager>()->GetClosestEnemy(GetActorLocation(), ClosestEnemy, Distance);
-
-	if (IsValid(ClosestEnemy) && Cast<ABaseEnemy>(ClosestEnemy)->IsAlive())
-	{
-		AIController->GetBlackboardComponent()->SetValueAsVector(TEXT("EnemyLocation"), ClosestEnemy->GetActorLocation());
-
-		if (Distance <= DamageRadius)
-		{
-			ClosestEnemy->TakeDamage(EnemyDamagePerSecond * DeltaSeconds, FDamageEvent(), AIController, this);
-		}
-	}
+	// if (Distance <= DamageRadius)
+	// {
+	// 	ClosestEnemy->TakeDamage(EnemyDamagePerSecond * DeltaSeconds, FDamageEvent(), AIController, this);
+	// }
 }
