@@ -28,15 +28,20 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly)
 	UNiagaraComponent* RatSwarmSystem = nullptr;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	UNiagaraComponent* BloodSpraySystem = nullptr;
 	
 	UPROPERTY(EditAnywhere)
 	UBehaviorTree* AIBehavior = nullptr;
 
+	// The blackboard entry to get the enemy actor from.
 	UPROPERTY(EditAnywhere)
-	float EnemyDamagePerSecond = 20.f;
+	FString EnemyBlackboardKeyName = "EnemyActor";
 
+	// When a corpse is within this radius, activate the blood spray system.
 	UPROPERTY(EditAnywhere)
-	float DamageRadius = 150.f;
+	float BloodActivationRadius = 150.f;
 
 private:
 	UPROPERTY()

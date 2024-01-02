@@ -5,7 +5,6 @@
 
 #include "AIController.h"
 #include "BaseEnemy.h"
-#include "EnemyManager.h"
 #include "NiagaraComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -14,6 +13,10 @@ ARatSwarm::ARatSwarm()
 {
 	RatSwarmSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Rat Swarm System"));
 	RatSwarmSystem->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+	BloodSpraySystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Blood Spray System"));
+	BloodSpraySystem->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	BloodSpraySystem->SetAutoActivate(false);
 }
 
 void ARatSwarm::BeginPlay()
@@ -35,8 +38,20 @@ void ARatSwarm::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	// if (Distance <= DamageRadius)
-	// {
-	// 	ClosestEnemy->TakeDamage(EnemyDamagePerSecond * DeltaSeconds, FDamageEvent(), AIController, this);
-	// }
+	const ABaseEnemy* Enemy = Cast<ABaseEnemy>(AIController->GetBlackboardComponent()->GetValueAsObject(*EnemyBlackboardKeyName));
+	
+	if (IsValid(Enemy) && !Enemy->IsAlive())
+	{
+		if (!BloodSpraySystem->IsActive())
+		{
+			BloodSpraySystem->Activate();
+		}
+	}
+	else
+	{
+		if (BloodSpraySystem->IsActive())
+		{
+			BloodSpraySystem->Deactivate();
+		}
+	}
 }
