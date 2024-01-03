@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "RatSwarm.generated.h"
+#include "RatSwarm_Character.generated.h"
 
 class UNiagaraComponent;
 class AAIController;
 class UBehaviorTree;
 
 UCLASS(HideCategories = (Character,Camera,Replication,Rendering,Collision,Actor,Input,LOD,Cooking))
-class ABILITYSYSTEM_API ARatSwarm : public ACharacter
+class ABILITYSYSTEM_API ARatSwarm_Character : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	ARatSwarm();
+	ARatSwarm_Character();
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,7 +41,7 @@ public:
 
 	// When a corpse is within this radius, activate the blood spray system.
 	UPROPERTY(EditAnywhere)
-	float BloodActivationRadius = 150.f;
+	float BloodActivationRadius = 100.f;
 
 private:
 	UPROPERTY()

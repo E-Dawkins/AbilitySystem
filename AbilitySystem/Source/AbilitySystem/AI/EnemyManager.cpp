@@ -3,7 +3,7 @@
 
 #include "EnemyManager.h"
 
-#include "BaseEnemy.h"
+#include "BaseEnemy_Character.h"
 #include "Kismet/GameplayStatics.h"
 
 void UEnemyManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -16,7 +16,7 @@ void UEnemyManager::Initialize(FSubsystemCollectionBase& Collection)
 
 void UEnemyManager::ManagerInit(const UWorld::FActorsInitializedParams& _Params)
 {
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseEnemy::StaticClass(), AllEnemies);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseEnemy_Character::StaticClass(), AllEnemies);
 }
 
 void UEnemyManager::GetClosestEnemy(FVector _Point, AActor*& _ClosestEnemy, float& _Distance)

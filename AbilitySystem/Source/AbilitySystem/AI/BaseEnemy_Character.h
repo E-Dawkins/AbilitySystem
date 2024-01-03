@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "BaseEnemy.generated.h"
+#include "BaseEnemy_Character.generated.h"
 
 UCLASS()
-class ABILITYSYSTEM_API ABaseEnemy : public ACharacter
+class ABILITYSYSTEM_API ABaseEnemy_Character : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	ABaseEnemy();
+	ABaseEnemy_Character();
 
 protected:
 	virtual void BeginPlay() override;

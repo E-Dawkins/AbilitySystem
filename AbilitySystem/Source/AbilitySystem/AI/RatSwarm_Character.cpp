@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "RatSwarm.h"
+#include "RatSwarm_Character.h"
 
 #include "AIController.h"
-#include "BaseEnemy.h"
+#include "BaseEnemy_Character.h"
 #include "NiagaraComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-ARatSwarm::ARatSwarm()
+ARatSwarm_Character::ARatSwarm_Character()
 {
 	RatSwarmSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Rat Swarm System"));
 	RatSwarmSystem->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -19,7 +19,7 @@ ARatSwarm::ARatSwarm()
 	BloodSpraySystem->SetAutoActivate(false);
 }
 
-void ARatSwarm::BeginPlay()
+void ARatSwarm_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -34,17 +34,23 @@ void ARatSwarm::BeginPlay()
 	}
 }
 
-void ARatSwarm::Tick(float DeltaSeconds)
+void ARatSwarm_Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	const ABaseEnemy* Enemy = Cast<ABaseEnemy>(AIController->GetBlackboardComponent()->GetValueAsObject(*EnemyBlackboardKeyName));
+	const ABaseEnemy_Character* Enemy = Cast<ABaseEnemy_Character>(AIController->GetBlackboardComponent()->GetValueAsObject(*EnemyBlackboardKeyName));
 	
 	if (IsValid(Enemy) && !Enemy->IsAlive())
 	{
-		if (!BloodSpraySystem->IsActive())
+		const FVector EnemyLocation = Enemy->GetActorLocation();
+		const FVector SwarmLocation = RatSwarmSystem->GetComponentLocation();
+		const bool bWithinRadius = (FVector::Dist(SwarmLocation, EnemyLocation) <= BloodActivationRadius);
+		
+		if (!BloodSpraySystem->IsActive() && bWithinRadius)
 		{
 			BloodSpraySystem->Activate();
+			BloodSpraySystem->SetUsingAbsoluteLocation(true);
+			BloodSpraySystem->SetWorldLocation(FVector(EnemyLocation.X, EnemyLocation.Y, SwarmLocation.Z));
 		}
 	}
 	else

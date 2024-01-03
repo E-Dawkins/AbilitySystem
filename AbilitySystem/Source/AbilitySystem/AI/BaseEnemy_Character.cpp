@@ -1,22 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BaseEnemy.h"
+#include "BaseEnemy_Character.h"
 
 #include "Components/CapsuleComponent.h"
 
-ABaseEnemy::ABaseEnemy()
+ABaseEnemy_Character::ABaseEnemy_Character()
 {
 	
 }
 
-void ABaseEnemy::BeginPlay()
+void ABaseEnemy_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-void ABaseEnemy::Tick(float DeltaSeconds)
+void ABaseEnemy_Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -31,7 +31,7 @@ void ABaseEnemy::Tick(float DeltaSeconds)
 	}
 }
 
-float ABaseEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+float ABaseEnemy_Character::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
 	Health -= DamageAmount;
@@ -44,7 +44,7 @@ float ABaseEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
-void ABaseEnemy::OnDeath()
+void ABaseEnemy_Character::OnDeath()
 {
 	bIsDead = true;
 	
@@ -52,7 +52,7 @@ void ABaseEnemy::OnDeath()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-void ABaseEnemy::OnCorpseDeath()
+void ABaseEnemy_Character::OnCorpseDeath()
 {
 	bIsCorpseDead = true;
 	

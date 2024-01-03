@@ -3,7 +3,7 @@
 
 #include "BTService_GetClosestEnemy.h"
 
-#include "AbilitySystem/AI/BaseEnemy.h"
+#include "AbilitySystem/AI/BaseEnemy_Character.h"
 #include "AbilitySystem/AI/EnemyManager.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -24,9 +24,6 @@ void UBTService_GetClosestEnemy::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 
 	if (IsValid(ClosestEnemy))
 	{
-		if (Cast<ABaseEnemy>(ClosestEnemy)->IsAlive())
-		{
-			OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyActor.SelectedKeyName, ClosestEnemy);
-		}
+		OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyActor.SelectedKeyName, ClosestEnemy);
 	}
 }
