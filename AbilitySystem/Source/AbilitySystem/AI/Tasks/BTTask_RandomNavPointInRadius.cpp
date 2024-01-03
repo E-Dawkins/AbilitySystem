@@ -21,7 +21,7 @@ EBTNodeResult::Type UBTTask_RandomNavPointInRadius::ExecuteTask(UBehaviorTreeCom
 	const FVector Origin = OwnerComp.GetOwner()->GetActorLocation();
 
 	FNavLocation RandomPoint;
-	const bool bLocationExists = NavSys->GetRandomPointInNavigableRadius(Origin, Radius, RandomPoint);
+	const bool bLocationExists = NavSys->GetRandomReachablePointInRadius(Origin, Radius, RandomPoint);
 
 	if (bLocationExists)
 	{

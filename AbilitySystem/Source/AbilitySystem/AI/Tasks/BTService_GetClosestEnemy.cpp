@@ -20,7 +20,7 @@ void UBTService_GetClosestEnemy::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 
 	AActor* ClosestEnemy;
 	float Distance;
-	GetWorld()->GetSubsystem<UEnemyManager>()->GetClosestEnemy(OwnerComp.GetOwner()->GetActorLocation(), ClosestEnemy, Distance);
+	GetWorld()->GetSubsystem<UEnemyManager>()->GetClosestEnemy(OwnerComp.GetOwner()->GetInstigator()->GetActorLocation(), ClosestEnemy, Distance);
 
 	if (IsValid(ClosestEnemy))
 	{

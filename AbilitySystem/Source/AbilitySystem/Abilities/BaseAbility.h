@@ -16,7 +16,6 @@ class ABILITYSYSTEM_API UBaseAbility : public UObject
 
 public:
 	// Put set-up code here, i.e. spawning a cursor particle
-	// This is the only virtual function that needs to be overriden to properly set-up ability
 	virtual void OnActivation(APlayerCharacter* _Player);
 
 	// Put actual ability code here, i.e. teleport the player

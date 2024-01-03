@@ -17,6 +17,8 @@ ARatSwarm_Character::ARatSwarm_Character()
 	BloodSpraySystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Blood Spray System"));
 	BloodSpraySystem->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	BloodSpraySystem->SetAutoActivate(false);
+
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void ARatSwarm_Character::BeginPlay()
@@ -37,7 +39,7 @@ void ARatSwarm_Character::BeginPlay()
 void ARatSwarm_Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	
 	const ABaseEnemy_Character* Enemy = Cast<ABaseEnemy_Character>(AIController->GetBlackboardComponent()->GetValueAsObject(*EnemyBlackboardKeyName));
 	
 	if (IsValid(Enemy) && !Enemy->IsAlive())
