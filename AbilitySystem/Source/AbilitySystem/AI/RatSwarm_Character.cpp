@@ -45,18 +45,18 @@ void ARatSwarm_Character::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	
 	const ABaseEnemy_Character* Enemy = Cast<ABaseEnemy_Character>(AIController->GetBlackboardComponent()->GetValueAsObject(*EnemyBlackboardKeyName));
+
+	const FVector SwarmLocation = RatSwarmSystem->GetComponentLocation();
+	const FVector EnemyLocation = IsValid(Enemy) ? Enemy->GetActorLocation() : SwarmLocation;
 	
-	if (IsValid(Enemy) && !Enemy->IsAlive())
+	if (IsValid(Enemy) && !Enemy->IsAlive() && FVector::Dist(SwarmLocation, EnemyLocation) <= BloodActivationRadius)
 	{
-		const FVector EnemyLocation = Enemy->GetActorLocation();
-		const FVector SwarmLocation = RatSwarmSystem->GetComponentLocation();
-		const bool bWithinRadius = (FVector::Dist(SwarmLocation, EnemyLocation) <= BloodActivationRadius);
-		
-		if (!BloodSpraySystem->IsActive() && bWithinRadius)
+		BloodSpraySystem->SetUsingAbsoluteLocation(true);
+		BloodSpraySystem->SetWorldLocation(FVector(EnemyLocation.X, EnemyLocation.Y, SwarmLocation.Z));
+
+		if (!BloodSpraySystem->IsActive())
 		{
 			BloodSpraySystem->Activate();
-			BloodSpraySystem->SetUsingAbsoluteLocation(true);
-			BloodSpraySystem->SetWorldLocation(FVector(EnemyLocation.X, EnemyLocation.Y, SwarmLocation.Z));
 		}
 	}
 	else
