@@ -13,6 +13,7 @@ ARatSwarm_Character::ARatSwarm_Character()
 {
 	RatSwarmSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Rat Swarm System"));
 	RatSwarmSystem->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	RatSwarmSystem->SetAutoActivate(false);
 
 	BloodSpraySystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Blood Spray System"));
 	BloodSpraySystem->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -34,6 +35,9 @@ void ARatSwarm_Character::BeginPlay()
 			AIController->RunBehaviorTree(AIBehavior);
 		}
 	}
+
+	RatSwarmSystem->SetFloatParameter(*SwarmLengthVariable, SwarmLength);
+	RatSwarmSystem->Activate();
 }
 
 void ARatSwarm_Character::Tick(float DeltaSeconds)
@@ -61,5 +65,10 @@ void ARatSwarm_Character::Tick(float DeltaSeconds)
 		{
 			BloodSpraySystem->Deactivate();
 		}
+	}
+
+	if (!IsValid(RatSwarmSystem) || RatSwarmSystem->GetSystemInstance()->GetAge() >= SwarmLength)
+	{
+		Destroy();
 	}
 }

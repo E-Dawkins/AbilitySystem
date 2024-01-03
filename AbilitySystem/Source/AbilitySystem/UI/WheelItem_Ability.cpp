@@ -14,13 +14,13 @@ UWheelItem_Ability::UWheelItem_Ability()
 void UWheelItem_Ability::InitializeItem(UWidgetTree* _WidgetTree, UPanelWidget* _ItemParent, FVector2D _Position,
                                         FVector2D _NormalSize, FVector2D _SelectedSize)
 {
-	Super::InitializeItem(_WidgetTree, _ItemParent, _Position, _NormalSize, _SelectedSize);
-
 	if (IsValid(Ability))
 	{
 		NormalIcon = Ability.GetDefaultObject()->NormalIcon;
 		SelectedIcon = Ability.GetDefaultObject()->SelectedIcon;
 	}
+	
+	Super::InitializeItem(_WidgetTree, _ItemParent, _Position, _NormalSize, _SelectedSize);
 }
 
 void UWheelItem_Ability::ItemSelect()

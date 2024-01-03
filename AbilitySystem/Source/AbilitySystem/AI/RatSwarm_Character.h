@@ -43,6 +43,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	float BloodActivationRadius = 100.f;
 
+	// In Seconds
+	UPROPERTY(EditAnywhere)
+	float SwarmLength = 10.f;
+
+	UPROPERTY(EditAnywhere)
+	FString SwarmLengthVariable = "SwarmLength";
+
 private:
 	UPROPERTY()
 	AAIController* AIController = nullptr;
