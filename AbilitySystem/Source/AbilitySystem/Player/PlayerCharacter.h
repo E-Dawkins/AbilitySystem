@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class UCameraComponent;
 class ABaseInteractable;
 class UPlayerHUD;
 class UWeaponWheel;
@@ -28,10 +29,13 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+	DECLARE_DELEGATE_OneParam(FInputEventDelegate, EInputEvent)
+	
 	void MoveForward(float _Value);
 	void MoveRight(float _Value);
-	void ToggleCrouch();
-	void ToggleSprint();
+	void ToggleCrouch(EInputEvent _InputEvent);
+	void ToggleSprint(EInputEvent _InputEvent);
+	void ToggleSlide();
 	void OnAbilityUsed();
 	void OnAbilityActivated();
 	void OpenWeaponWheel();
@@ -49,35 +53,66 @@ public:
 	UBaseAbility* GetCurrentAbility() const { return CurrentAbility.GetDefaultObject(); }
 
 	UFUNCTION(BlueprintCallable)
-	UPlayerHUD* GetPlayerHUD() const {return PlayerHUDPtr; }
-
-	UFUNCTION(BlueprintCallable)
 	float GetInteractionRange() const { return InteractionRange; }
 
+	FVector GetCameraTargetLocation() const { return GetActorLocation() + GetActorUpVector() * (bIsCrouched ? CrouchedEyeHeight : BaseEyeHeight); }
+
 private:
-	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
+	UPROPERTY(EditAnywhere, Category = "Player|Movement") // In cm/s
 	float MaxWalkSpeed = 600.f;
 	
-	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
+	UPROPERTY(EditAnywhere, Category = "Player|Movement") // In cm/s
 	float MaxSprintSpeed = 1000.f;
 	
-	UPROPERTY(EditAnywhere, Category = "Character") // In cm/s
+	UPROPERTY(EditAnywhere, Category = "Player|Movement") // In cm/s
 	float MaxCrouchSpeed = 300.f;
 
-	UPROPERTY(EditAnywhere, Category = "Character")
-	TSubclassOf<UBaseAbility> CurrentAbility;
+	// Toggle means press to start sprint, press again to end sprint
+	UPROPERTY(EditAnywhere, Category = "Player|Movement")
+	bool bToggleSprint = false;
 
-	UPROPERTY(EditAnywhere, Category = "Character")
+	// Toggle means press to start crouch, press again to end crouch
+	UPROPERTY(EditAnywhere, Category = "Player|Movement")
+	bool bToggleCrouch = true;
+
+	// Slide is activated by crouching while sprinting.
+	// Slide can be cancelled by starting to sprint mid-slide.
+	UPROPERTY(EditAnywhere, Category = "Player|Movement")
+	bool bCanSlide = true;
+
+	// The length of the slide, in seconds
+	UPROPERTY(EditAnywhere, Category = "Player|Movement", meta=(ClampMin = "0.1"))
+	float SlideTime = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Player|UI")
 	TSubclassOf<UWeaponWheel> WeaponWheelClass;
 
-	UPROPERTY(EditAnywhere, Category = "Character")
+	UPROPERTY(EditAnywhere, Category = "Player|UI")
 	TSubclassOf<UPlayerHUD> PlayerHUDClass;
 
-	UPROPERTY(EditAnywhere, Category = "Character")
-	float InteractionRange = 500.f;
+	UPROPERTY(EditAnywhere, Category = "Player")
+	TSubclassOf<UBaseAbility> CurrentAbility;
+
+	UPROPERTY(EditAnywhere, Category = "Player")
+	float InteractionRange = 300.f;
+
+	// If this is 0, instantly set camera location (no smoothing)
+	UPROPERTY(EditAnywhere, Category = "Player", meta=(ClampMin = "0.0"))
+	float CameraSmoothing = 10.f;
+
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* CameraComponent;
 
 private:
 	bool bIsSprinting = false;
+	bool bIsSliding = false;
+
+	float InitialGroundFriction = 0.f;
+	float InitialBrakingDeceleration = 0.f;
+	
+	float CurrentCamSmoothing = 0.f;
+
+	FTimerHandle SlidingHandle;
 
 	UPROPERTY()
 	UWeaponWheel* WeaponWheelPtr = nullptr;

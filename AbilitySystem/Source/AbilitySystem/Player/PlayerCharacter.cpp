@@ -7,10 +7,16 @@
 #include "AbilitySystem/Interactables/BaseInteractable.h"
 #include "AbilitySystem/UI/PlayerHUD.h"
 #include "AbilitySystem/UI/WeaponWheel.h"
+#include "Camera/CameraComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 APlayerCharacter::APlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));
+	CameraComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	CameraComponent->SetUsingAbsoluteLocation(true);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -22,6 +28,9 @@ void APlayerCharacter::BeginPlay()
 		PlayerHUDPtr = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
 		PlayerHUDPtr->AddToViewport();
 	}
+
+	// Initial camera location
+	CameraComponent->SetWorldLocation(GetCameraTargetLocation());
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -40,6 +49,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 
 	CheckForInteractable();
+
+	// Update camera location
+	const FVector CamTargetLocation = GetCameraTargetLocation();
+	const float CurrentZ = UKismetMathLibrary::FInterpTo(CameraComponent->GetComponentLocation().Z, CamTargetLocation.Z, DeltaTime, CurrentCamSmoothing);
+	CameraComponent->SetWorldLocation(FVector(CamTargetLocation.X, CamTargetLocation.Y, CurrentZ));
+
+	if (CameraComponent->GetComponentLocation().Z == CamTargetLocation.Z || GetCharacterMovement()->IsFalling())
+	{
+		CurrentCamSmoothing = 0.f;
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -48,9 +67,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	// Actions
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Pressed, this, &APlayerCharacter::ToggleSprint);
-	PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Released, this, &APlayerCharacter::ToggleSprint);
-	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &APlayerCharacter::ToggleCrouch);
+	PlayerInputComponent->BindAction<FInputEventDelegate>(TEXT("Sprint"), IE_Pressed, this, &APlayerCharacter::ToggleSprint, IE_Pressed);
+	PlayerInputComponent->BindAction<FInputEventDelegate>(TEXT("Sprint"), IE_Released, this, &APlayerCharacter::ToggleSprint, IE_Released);
+	PlayerInputComponent->BindAction<FInputEventDelegate>(TEXT("Crouch"), IE_Pressed, this, &APlayerCharacter::ToggleCrouch, IE_Pressed);
+	PlayerInputComponent->BindAction<FInputEventDelegate>(TEXT("Crouch"), IE_Released, this, &APlayerCharacter::ToggleCrouch, IE_Released);
 	PlayerInputComponent->BindAction(TEXT("AbilityUse"), IE_Pressed, this, &APlayerCharacter::OnAbilityActivated);
 	PlayerInputComponent->BindAction(TEXT("AbilityUse"), IE_Released, this, &APlayerCharacter::OnAbilityUsed);
 	PlayerInputComponent->BindAction(TEXT("WeaponWheelUse"), IE_Pressed, this, &APlayerCharacter::OpenWeaponWheel);
@@ -85,24 +105,105 @@ void APlayerCharacter::MoveRight(float _Value)
 	AddMovementInput(GetActorRightVector(), _Value);
 }
 
-void APlayerCharacter::ToggleCrouch()
+void APlayerCharacter::ToggleCrouch(EInputEvent _InputEvent)
 {
-	if (const UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	if (bIsSliding || GetCharacterMovement()->IsFalling())
 	{
-		if (MoveComp->IsCrouching())
+		return;
+	}
+
+	CurrentCamSmoothing = CameraSmoothing;
+	
+	if (bToggleCrouch)
+	{
+		if (_InputEvent == IE_Pressed)
+		{
+			if (bIsCrouched)
+			{
+				UnCrouch();
+			}
+			else
+			{
+				Crouch();
+
+				if (bIsSprinting)
+				{
+					ToggleSlide();
+				}
+			}
+		}
+	}
+	else
+	{
+		if (_InputEvent == IE_Pressed && !bIsCrouched)
+		{
+			Crouch();
+
+			if (bIsSprinting)
+			{
+				ToggleSlide();
+			}
+		}
+		else if (_InputEvent == IE_Released && bIsCrouched)
 		{
 			UnCrouch();
 		}
-		else
-		{
-			Crouch();
-		}	
 	}
 }
 
-void APlayerCharacter::ToggleSprint()
+void APlayerCharacter::ToggleSprint(EInputEvent _InputEvent)
 {
-	bIsSprinting = !bIsSprinting;
+	if (bToggleSprint)
+	{
+		bIsSprinting = (_InputEvent == IE_Pressed) ? !bIsSprinting : bIsSprinting;
+	}
+	else
+	{
+		bIsSprinting = (_InputEvent == IE_Pressed);
+	}
+
+	if (bIsSprinting)
+	{
+		if (bIsCrouched)
+		{
+			UnCrouch();
+			CurrentCamSmoothing = CameraSmoothing;
+		}
+
+		if (bIsSliding)
+		{
+			ToggleSlide();
+			GetWorld()->GetTimerManager().ClearTimer(SlidingHandle);
+		}
+	}
+}
+
+void APlayerCharacter::ToggleSlide()
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		if (!bIsSliding && bCanSlide)
+		{
+			InitialGroundFriction = MoveComp->GroundFriction;
+			InitialBrakingDeceleration = MoveComp->BrakingDecelerationWalking;
+				
+			MoveComp->GroundFriction = 0.f;
+			MoveComp->BrakingDecelerationWalking = 0.f;
+			
+			GetWorld()->GetTimerManager().SetTimer(SlidingHandle, [this] {ToggleSlide();}, SlideTime, false);
+
+			Controller->SetIgnoreMoveInput(true);
+		}
+		else
+		{
+			MoveComp->GroundFriction = InitialGroundFriction;
+			MoveComp->BrakingDecelerationWalking = InitialBrakingDeceleration;
+
+			Controller->SetIgnoreMoveInput(false);
+		}
+	}
+
+	bIsSliding = !bIsSliding;
 }
 
 void APlayerCharacter::OnAbilityActivated()
