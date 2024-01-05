@@ -27,6 +27,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 
 private:
 	DECLARE_DELEGATE_OneParam(FInputEventDelegate, EInputEvent)
@@ -55,8 +57,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetInteractionRange() const { return InteractionRange; }
 
-	FVector GetCameraTargetLocation() const { return GetActorLocation() + GetActorUpVector() * (bIsCrouched ? CrouchedEyeHeight : BaseEyeHeight); }
-
 private:
 	UPROPERTY(EditAnywhere, Category = "Player|Movement") // In cm/s
 	float MaxWalkSpeed = 600.f;
@@ -77,11 +77,12 @@ private:
 
 	// Slide is activated by crouching while sprinting.
 	// Slide can be cancelled by starting to sprint mid-slide.
+	// Slide will only activate if velocity is >= mid-point of walk / sprint speeds.
 	UPROPERTY(EditAnywhere, Category = "Player|Movement")
 	bool bCanSlide = true;
 
 	// The length of the slide, in seconds
-	UPROPERTY(EditAnywhere, Category = "Player|Movement", meta=(ClampMin = "0.1"))
+	UPROPERTY(EditAnywhere, Category = "Player|Movement", meta=(ClampMin = "0.1", EditCondition = "bCanSlide", EditConditionHides))
 	float SlideTime = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Player|UI")
@@ -106,11 +107,13 @@ private:
 private:
 	bool bIsSprinting = false;
 	bool bIsSliding = false;
+	bool bShouldCrouch = false;
 
 	float InitialGroundFriction = 0.f;
 	float InitialBrakingDeceleration = 0.f;
 	
-	float CurrentCamSmoothing = 0.f;
+	float CamSmoothing_Current = 0.f;
+	FVector CamSmoothing_Offset = FVector::ZeroVector;
 
 	FTimerHandle SlidingHandle;
 

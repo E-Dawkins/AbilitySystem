@@ -29,8 +29,12 @@ void APlayerCharacter::BeginPlay()
 		PlayerHUDPtr->AddToViewport();
 	}
 
-	// Initial camera location
-	CameraComponent->SetWorldLocation(GetCameraTargetLocation());
+	// Initial cam location
+	CamSmoothing_Offset = GetActorUpVector() * BaseEyeHeight;
+	CameraComponent->SetWorldLocation(GetActorLocation() + CamSmoothing_Offset);
+	
+	InitialGroundFriction = GetCharacterMovement()->GroundFriction;
+	InitialBrakingDeceleration = GetCharacterMovement()->BrakingDecelerationWalking;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -49,15 +53,15 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 
 	CheckForInteractable();
-
+	
 	// Update camera location
-	const FVector CamTargetLocation = GetCameraTargetLocation();
-	const float CurrentZ = UKismetMathLibrary::FInterpTo(CameraComponent->GetComponentLocation().Z, CamTargetLocation.Z, DeltaTime, CurrentCamSmoothing);
-	CameraComponent->SetWorldLocation(FVector(CamTargetLocation.X, CamTargetLocation.Y, CurrentZ));
+	const FVector SmoothingTarget = GetActorLocation() + CamSmoothing_Offset;
+	const float CurrentZ = UKismetMathLibrary::FInterpTo(CameraComponent->GetComponentLocation().Z, SmoothingTarget.Z, DeltaTime, CamSmoothing_Current);
+	CameraComponent->SetWorldLocation(FVector(SmoothingTarget.X, SmoothingTarget.Y, CurrentZ));
 
-	if (CameraComponent->GetComponentLocation().Z == CamTargetLocation.Z || GetCharacterMovement()->IsFalling())
+	if (CameraComponent->GetComponentLocation().Z == SmoothingTarget.Z || GetCharacterMovement()->IsFalling())
 	{
-		CurrentCamSmoothing = 0.f;
+		CamSmoothing_Current = 0.f;
 	}
 }
 
@@ -95,6 +99,22 @@ void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+void APlayerCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+	CamSmoothing_Current = CameraSmoothing;
+	CamSmoothing_Offset = GetActorUpVector() * CrouchedEyeHeight;
+}
+
+void APlayerCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+	
+	CamSmoothing_Current = CameraSmoothing;
+	CamSmoothing_Offset = GetActorUpVector() * BaseEyeHeight;
+}
+
 void APlayerCharacter::MoveForward(float _Value)
 {
 	AddMovementInput(GetActorForwardVector(), _Value);
@@ -107,46 +127,48 @@ void APlayerCharacter::MoveRight(float _Value)
 
 void APlayerCharacter::ToggleCrouch(EInputEvent _InputEvent)
 {
-	if (bIsSliding || GetCharacterMovement()->IsFalling())
+	if (GetCharacterMovement()->IsFalling())
 	{
 		return;
 	}
 
-	CurrentCamSmoothing = CameraSmoothing;
-	
+	// Determine crouched state
 	if (bToggleCrouch)
 	{
 		if (_InputEvent == IE_Pressed)
 		{
-			if (bIsCrouched)
-			{
-				UnCrouch();
-			}
-			else
-			{
-				Crouch();
-
-				if (bIsSprinting)
-				{
-					ToggleSlide();
-				}
-			}
+			bShouldCrouch = !bIsCrouched;
 		}
 	}
 	else
 	{
 		if (_InputEvent == IE_Pressed && !bIsCrouched)
 		{
-			Crouch();
-
-			if (bIsSprinting)
-			{
-				ToggleSlide();
-			}
+			bShouldCrouch = true;
 		}
 		else if (_InputEvent == IE_Released && bIsCrouched)
 		{
-			UnCrouch();
+			bShouldCrouch = false;
+		}
+	}
+
+	// Apply crouched + sliding state
+	if (bShouldCrouch)
+	{
+		Crouch();
+
+		if (bIsSprinting && !bIsSliding)
+		{
+			ToggleSlide();
+		}
+	}
+	else
+	{
+		UnCrouch();
+
+		if (bIsSliding)
+		{
+			ToggleSlide();
 		}
 	}
 }
@@ -167,13 +189,12 @@ void APlayerCharacter::ToggleSprint(EInputEvent _InputEvent)
 		if (bIsCrouched)
 		{
 			UnCrouch();
-			CurrentCamSmoothing = CameraSmoothing;
+			bShouldCrouch = false;
 		}
 
 		if (bIsSliding)
 		{
 			ToggleSlide();
-			GetWorld()->GetTimerManager().ClearTimer(SlidingHandle);
 		}
 	}
 }
@@ -182,17 +203,14 @@ void APlayerCharacter::ToggleSlide()
 {
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
-		if (!bIsSliding && bCanSlide)
+		if (!bIsSliding && bCanSlide && GetVelocity().Size() >= ((MaxWalkSpeed + MaxSprintSpeed) * 0.5f))
 		{
-			InitialGroundFriction = MoveComp->GroundFriction;
-			InitialBrakingDeceleration = MoveComp->BrakingDecelerationWalking;
-				
 			MoveComp->GroundFriction = 0.f;
 			MoveComp->BrakingDecelerationWalking = 0.f;
 			
-			GetWorld()->GetTimerManager().SetTimer(SlidingHandle, [this] {ToggleSlide();}, SlideTime, false);
-
 			Controller->SetIgnoreMoveInput(true);
+
+			GetWorld()->GetTimerManager().SetTimer(SlidingHandle, [this] {ToggleSlide();}, SlideTime, false);
 		}
 		else
 		{
@@ -200,10 +218,12 @@ void APlayerCharacter::ToggleSlide()
 			MoveComp->BrakingDecelerationWalking = InitialBrakingDeceleration;
 
 			Controller->SetIgnoreMoveInput(false);
+			
+			GetWorld()->GetTimerManager().ClearTimer(SlidingHandle);
 		}
 	}
 
-	bIsSliding = !bIsSliding;
+	bIsSliding = Controller->IsMoveInputIgnored();
 }
 
 void APlayerCharacter::OnAbilityActivated()
