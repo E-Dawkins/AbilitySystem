@@ -6,6 +6,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
+// To make plugin package
+#include "Components/InputComponent.h"
+#include "GameFramework/Controller.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+
 AEnhancedCharacter::AEnhancedCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;

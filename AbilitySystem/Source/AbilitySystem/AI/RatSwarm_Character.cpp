@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "BaseEnemy_Character.h"
 #include "NiagaraComponent.h"
+#include "NiagaraSystemInstanceController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -67,7 +68,7 @@ void ARatSwarm_Character::Tick(float DeltaSeconds)
 		}
 	}
 
-	if (!IsValid(RatSwarmSystem) || RatSwarmSystem->GetSystemInstance()->GetAge() >= SwarmLength)
+	if (RatSwarmSystem->GetSystemInstanceController() && RatSwarmSystem->GetSystemInstanceController()->GetAge() >= SwarmLength)
 	{
 		Destroy();
 	}

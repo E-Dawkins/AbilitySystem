@@ -93,7 +93,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Enhanced Character", meta=(ClampMin = "0.0"))
 	float CameraSmoothing = 10.f;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UCameraComponent* CameraComponent = nullptr;
 	
 protected:
