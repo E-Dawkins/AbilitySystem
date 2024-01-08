@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnhancedCharacter.h"
+#include "GameFramework/Character.h"
 #include "../Abilities/BaseAbility.h"
 #include "PlayerCharacter.generated.h"
 
@@ -12,7 +13,7 @@ class ABaseInteractable;
 class UPlayerHUD;
 class UWeaponWheel;
 
-UCLASS(hideCategories = (Replication, Rendering, Actor, LOD, Cooking, ActorTick))
+UCLASS()
 class ABILITYSYSTEM_API APlayerCharacter : public AEnhancedCharacter
 {
 	GENERATED_BODY()
