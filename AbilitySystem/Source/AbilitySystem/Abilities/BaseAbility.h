@@ -25,6 +25,8 @@ public:
 
 	virtual void OnDeactivation();
 
+	virtual void BeginDestroy() override;
+
 public:
 	bool GetActiveState() const { return bAbilityActive; }
 

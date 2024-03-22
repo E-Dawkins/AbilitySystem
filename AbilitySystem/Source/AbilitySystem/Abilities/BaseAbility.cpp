@@ -23,3 +23,10 @@ void UBaseAbility::OnDeactivation()
 {
 	bAbilityActive = false;
 }
+
+void UBaseAbility::BeginDestroy()
+{
+	UObject::BeginDestroy();
+
+	OnDeactivation();
+}
