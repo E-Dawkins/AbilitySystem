@@ -23,7 +23,7 @@ struct FTimeBendOptions
 	UPROPERTY(EditAnywhere)
 	TEnumAsByte<ETimeBendType> TimeBendType = TB_SLOW;
 
-	UPROPERTY(EditAnywhere, meta=(ClampMin="0.1"))
+	UPROPERTY(EditAnywhere, meta=(ClampMin="0.1", EditCondition="TimeBendType==TB_SLOW", EditConditionHides))
 	float GlobalDilationAmount = 0.5f;
 };
 
@@ -47,5 +47,11 @@ private:
 	
 	UPROPERTY()
 	TArray<UBendTime_Register*> RegisteredComps;
+
+	/* Stored Data --> */
+
+	float GlobalDilation = 1.f;
+
+	/* Stored Data <-- */
 	
 };

@@ -3,6 +3,7 @@
 
 #include "BendTime_Register.h"
 #include "BendTime_Manager.h"
+#include "BendTime_Register_Handler_Base.h"
 #include "Kismet/GameplayStatics.h"
 
 void UBendTime_Register::BeginPlay()
@@ -13,26 +14,58 @@ void UBendTime_Register::BeginPlay()
 	{
 		World->GetSubsystem<UBendTime_Manager>()->RegisterComponent(this);
 	}
-}
 
-void UBendTime_Register::OnStartTimeBend(const FTimeBendOptions Options)
-{
-	if (Options.TimeBendType == TB_SLOW)
+	for (auto H : Handlers)
 	{
-		if (bIgnoreTimeBend)
-		{
-			GetOwner()->CustomTimeDilation = 1.f / UGameplayStatics::GetGlobalTimeDilation(GetOwner()->GetWorld());
-		}
+		HandlerPointers.Add(NewObject<UBendTime_Register_Handler_Base>(this, H));
 	}
 }
 
-void UBendTime_Register::OnEndTimeBend(const FTimeBendOptions Options)
+void UBendTime_Register::OnStartTimeSlow(FTimeBendOptions Options)
 {
-	if (Options.TimeBendType == TB_SLOW)
+	if (bIgnoreTimeBend)
 	{
-		if (bIgnoreTimeBend)
-		{
-			GetOwner()->CustomTimeDilation = 1.f;
-		}
+		CustomDilation = GetOwner()->CustomTimeDilation;
+		
+		GetOwner()->CustomTimeDilation = 1.f / UGameplayStatics::GetGlobalTimeDilation(GetOwner()->GetWorld());
+	}
+}
+
+void UBendTime_Register::OnEndTimeSlow(FTimeBendOptions Options)
+{
+	if (bIgnoreTimeBend)
+	{
+		GetOwner()->CustomTimeDilation = CustomDilation;
+	}
+}
+
+void UBendTime_Register::OnStartTimeStop(FTimeBendOptions Options)
+{
+	if (bIgnoreTimeBend)
+		return;
+	
+	bActorTickEnabled = GetOwner()->IsActorTickEnabled();
+	bSimulatePhysics = GetOwner()->GetRootComponent()->IsSimulatingPhysics();
+
+	for (const auto Handler : HandlerPointers)
+	{
+		Handler->StartHandle(GetOwner());
+	}
+	
+	GetOwner()->SetActorTickEnabled(false);
+	Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->SetSimulatePhysics(false);
+}
+
+void UBendTime_Register::OnEndTimeStop(FTimeBendOptions Options)
+{
+	if (bIgnoreTimeBend)
+		return;
+	
+	GetOwner()->SetActorTickEnabled(bActorTickEnabled);
+	Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->SetSimulatePhysics(bSimulatePhysics);
+
+	for (const auto Handler : HandlerPointers)
+	{
+		Handler->EndHandle(GetOwner());
 	}
 }

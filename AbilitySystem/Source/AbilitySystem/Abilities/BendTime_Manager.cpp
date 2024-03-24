@@ -10,12 +10,18 @@ void UBendTime_Manager::OnStartTimeBend(const FTimeBendOptions Options)
 {
 	if (Options.TimeBendType == TB_SLOW)
 	{
+		GlobalDilation = UGameplayStatics::GetGlobalTimeDilation(GetWorld());
+		
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), Options.GlobalDilationAmount);
 	}
 	
 	for (const auto Comp : RegisteredComps)
 	{
-		Comp->OnStartTimeBend(Options);
+		switch (Options.TimeBendType)
+		{
+			case TB_SLOW:	Comp->OnStartTimeSlow(Options); break;
+			default:		Comp->OnStartTimeStop(Options); break;
+		}
 	}
 }
 
@@ -23,12 +29,16 @@ void UBendTime_Manager::OnStopTimeBend(const FTimeBendOptions Options)
 {
 	if (Options.TimeBendType == TB_SLOW)
 	{
-		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), GlobalDilation);
 	}
 	
 	for (const auto Comp : RegisteredComps)
 	{
-		Comp->OnEndTimeBend(Options);
+		switch (Options.TimeBendType)
+		{
+			case TB_SLOW:	Comp->OnEndTimeSlow(Options); break;
+			default:		Comp->OnEndTimeStop(Options); break;
+		}
 	}
 }
 
