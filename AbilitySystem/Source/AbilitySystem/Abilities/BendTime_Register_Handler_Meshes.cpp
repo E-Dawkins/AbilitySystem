@@ -3,33 +3,41 @@
 
 #include "BendTime_Register_Handler_Meshes.h"
 
-void UBendTime_Register_Handler_Meshes::StartHandle(AActor* ActorToHandle)
+void UBendTime_Register_Handler_Meshes::SetupHandle()
 {
-	Super::StartHandle(ActorToHandle);
-	
-	TArray<UMeshComponent*> Meshes;
-	ActorToHandle->GetComponents<UMeshComponent>(Meshes);
+	Super::SetupHandle();
 
-	Velocities.Empty();
-	
-	for (const auto MeshPtr : Meshes)
+	StoredData.Empty();
+}
+
+void UBendTime_Register_Handler_Meshes::StartHandle(UActorComponent* CompToHandle)
+{
+	Super::StartHandle(CompToHandle);
+
+	if (UMeshComponent* MeshPtr = Cast<UMeshComponent>(CompToHandle))
 	{
-		Velocities.Add(MeshPtr, MeshPtr->GetPhysicsLinearVelocity());
+		StoredData.Add
+		(
+			MeshPtr,
+			{MeshPtr->GetPhysicsLinearVelocity(), MeshPtr->GetPhysicsAngularVelocityInDegrees()}
+		);
+		
 		MeshPtr->PutAllRigidBodiesToSleep();
 	}
 }
 
-void UBendTime_Register_Handler_Meshes::EndHandle(AActor* ActorToHandle)
+void UBendTime_Register_Handler_Meshes::EndHandle(UActorComponent* CompToHandle)
 {
-	Super::EndHandle(ActorToHandle);
+	Super::EndHandle(CompToHandle);
 
-	TArray<UMeshComponent*> Meshes;
-	ActorToHandle->GetComponents<UMeshComponent>(Meshes);
-	
-	for (const auto MeshPtr : Meshes)
+	if (UMeshComponent* MeshPtr = Cast<UMeshComponent>(CompToHandle))
 	{
-		const FVector* Vel = Velocities.Find(MeshPtr);
-		MeshPtr->SetAllPhysicsLinearVelocity(Vel ? *Vel : FVector::ZeroVector);
+		if (const FMeshData* Velocities = StoredData.Find(MeshPtr))
+		{
+			MeshPtr->SetAllPhysicsLinearVelocity(Velocities->LinearVelocity);
+			MeshPtr->SetAllPhysicsAngularVelocityInDegrees(Velocities->AngularVelocity);
+		}
+		
 		MeshPtr->WakeAllRigidBodies();
 	}
 }

@@ -5,6 +5,11 @@
 
 #include "AbilitySystem/Player/PlayerCharacter.h"
 
+void UAb_BendTime::ResetAbility()
+{
+	bIsBendingTime = false;
+}
+
 void UAb_BendTime::OnUse()
 {
 	Super::OnUse();
@@ -15,13 +20,6 @@ void UAb_BendTime::OnUse()
 	}
 	
 	ToggleTimeBend();
-}
-
-void UAb_BendTime::OnDeactivation()
-{
-	Super::OnDeactivation();
-
-	bIsBendingTime = false;
 }
 
 void UAb_BendTime::ToggleTimeBend()

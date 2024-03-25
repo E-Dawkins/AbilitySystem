@@ -13,9 +13,9 @@ UCLASS()
 class ABILITYSYSTEM_API UAb_BendTime : public UBaseAbility
 {
 	GENERATED_BODY()
-	
+
+	virtual void ResetAbility() override;
 	virtual void OnUse() override;
-	virtual void OnDeactivation() override;
 	
 private:
 	UFUNCTION()

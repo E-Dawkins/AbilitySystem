@@ -12,7 +12,8 @@ class ABILITYSYSTEM_API UBendTime_Register_Handler_Base : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void StartHandle(AActor* ActorToHandle) {};
-	virtual void EndHandle(AActor* ActorToHandle) {};
+	virtual void SetupHandle() {};
+	virtual void StartHandle(UActorComponent* CompToHandle) {};
+	virtual void EndHandle(UActorComponent* CompToHandle) {};
 		
 };

@@ -4,6 +4,7 @@
 #include "BendTime_Register.h"
 #include "BendTime_Manager.h"
 #include "BendTime_Register_Handler_Base.h"
+#include "BendTime_Register_Handler_Meshes.h"
 #include "Kismet/GameplayStatics.h"
 
 void UBendTime_Register::BeginPlay()
@@ -15,10 +16,7 @@ void UBendTime_Register::BeginPlay()
 		World->GetSubsystem<UBendTime_Manager>()->RegisterComponent(this);
 	}
 
-	for (auto H : Handlers)
-	{
-		HandlerPointers.Add(NewObject<UBendTime_Register_Handler_Base>(this, H));
-	}
+	RegisterHandlers();
 }
 
 void UBendTime_Register::OnStartTimeSlow(FTimeBendOptions Options)
@@ -49,8 +47,10 @@ void UBendTime_Register::OnStartTimeStop(FTimeBendOptions Options)
 
 	for (const auto Handler : HandlerPointers)
 	{
-		Handler->StartHandle(GetOwner());
+		Handler->SetupHandle();
 	}
+	
+	RunHandlers();
 	
 	GetOwner()->SetActorTickEnabled(false);
 	Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->SetSimulatePhysics(false);
@@ -64,8 +64,40 @@ void UBendTime_Register::OnEndTimeStop(FTimeBendOptions Options)
 	GetOwner()->SetActorTickEnabled(bActorTickEnabled);
 	Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->SetSimulatePhysics(bSimulatePhysics);
 
-	for (const auto Handler : HandlerPointers)
+	EndHandlers();
+}
+
+void UBendTime_Register::RunHandlers()
+{
+	for (UActorComponent* Comp : GetOwner()->GetComponents())
 	{
-		Handler->EndHandle(GetOwner());
+		if (UBendTime_Register_Handler_Base* Handler = GetHandler(Comp))
+		{
+			Handler->StartHandle(Comp);
+		}
 	}
+}
+
+void UBendTime_Register::EndHandlers()
+{
+	for (UActorComponent* Comp : GetOwner()->GetComponents())
+	{
+		if (UBendTime_Register_Handler_Base* Handler = GetHandler(Comp))
+		{
+			Handler->EndHandle(Comp);
+		}
+	}
+}
+
+void UBendTime_Register::RegisterHandlers()
+{
+	HandlerPointers.Add(NewObject<UBendTime_Register_Handler_Meshes>());
+}
+
+UBendTime_Register_Handler_Base* UBendTime_Register::GetHandler(UActorComponent* ActorComp)
+{
+	if (HandlerOptions.bMeshHandler && ActorComp->IsA(UMeshComponent::StaticClass()))
+		return HandlerPointers[0];
+	
+	return nullptr;
 }

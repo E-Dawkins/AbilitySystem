@@ -15,6 +15,9 @@ class ABILITYSYSTEM_API UBaseAbility : public UObject
 	GENERATED_BODY()
 
 public:
+	UBaseAbility();
+
+public:
 	// Put set-up code here, i.e. spawning a cursor particle
 	virtual void OnActivation(APlayerCharacter* _Player);
 
@@ -26,6 +29,15 @@ public:
 	virtual void OnDeactivation();
 
 	virtual void BeginDestroy() override;
+
+protected:
+	UFUNCTION()
+	virtual void BeginPlay(UWorld* World);
+
+	UFUNCTION()
+	virtual void EndPlay(UWorld* World, bool bSessionEnded, bool bCleanupResources);
+
+	virtual void ResetAbility();
 
 public:
 	bool GetActiveState() const { return bAbilityActive; }

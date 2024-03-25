@@ -10,6 +10,15 @@
 class UBendTime_Register_Handler_Base;
 struct FTimeBendOptions;
 
+USTRUCT(Atomic)
+struct FHandlerOptions
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	bool bMeshHandler;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ABILITYSYSTEM_API UBendTime_Register : public UActorComponent
 {
@@ -25,6 +34,12 @@ private:
 	void OnStartTimeStop(FTimeBendOptions Options);
 	void OnEndTimeStop(FTimeBendOptions Options);
 
+	void RunHandlers();
+	void EndHandlers();
+
+	void RegisterHandlers();
+	UBendTime_Register_Handler_Base* GetHandler(UActorComponent* ActorComp);
+
 private:
 	friend class UBendTime_Manager;
 
@@ -32,7 +47,7 @@ private:
 	bool bIgnoreTimeBend = false;
 
 	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<UBendTime_Register_Handler_Base>> Handlers;
+	FHandlerOptions HandlerOptions;
 
 	UPROPERTY()
 	TArray<UBendTime_Register_Handler_Base*> HandlerPointers;

@@ -3,6 +3,28 @@
 
 #include "BaseAbility.h"
 
+UBaseAbility::UBaseAbility()
+{
+	FWorldDelegates::OnPostWorldCreation.AddUObject(this, &UBaseAbility::BeginPlay);
+	FWorldDelegates::OnPostWorldCleanup.AddUObject(this, &UBaseAbility::EndPlay);
+}
+
+void UBaseAbility::BeginPlay(UWorld* World)
+{
+	ResetAbility();
+}
+
+void UBaseAbility::EndPlay(UWorld* World, bool bSessionEnded, bool bCleanupResources)
+{
+	ResetAbility();
+}
+
+void UBaseAbility::ResetAbility()
+{
+	PlayerPtr = nullptr;
+	bAbilityActive = false;
+}
+
 void UBaseAbility::OnActivation(APlayerCharacter* _Player)
 {
 	PlayerPtr = _Player;
