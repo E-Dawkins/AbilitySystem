@@ -7,7 +7,7 @@
 #include "BendTime_Register.generated.h"
 
 
-class UBendTime_Register_Handler_Base;
+class UBTRHandler_Base;
 struct FTimeBendOptions;
 
 USTRUCT(Atomic)
@@ -17,6 +17,12 @@ struct FHandlerOptions
 
 	UPROPERTY(EditAnywhere)
 	bool bMeshHandler;
+
+	UPROPERTY(EditAnywhere)
+	bool bParticleHandler;
+
+	UPROPERTY(EditAnywhere)
+	bool bAIHandler;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -38,7 +44,7 @@ private:
 	void EndHandlers();
 
 	void RegisterHandlers();
-	UBendTime_Register_Handler_Base* GetHandler(UActorComponent* ActorComp);
+	UBTRHandler_Base* GetHandler(UActorComponent* ActorComp);
 
 private:
 	friend class UBendTime_Manager;
@@ -50,7 +56,7 @@ private:
 	FHandlerOptions HandlerOptions;
 
 	UPROPERTY()
-	TArray<UBendTime_Register_Handler_Base*> HandlerPointers;
+	TArray<UBTRHandler_Base*> HandlerPointers;
 
 	/* Stored Data --> */
 

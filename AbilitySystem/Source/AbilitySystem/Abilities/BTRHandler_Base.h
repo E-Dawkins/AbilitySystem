@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BendTime_Register_Handler_Base.generated.h"
+#include "BTRHandler_Base.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class ABILITYSYSTEM_API UBendTime_Register_Handler_Base : public UObject
+class ABILITYSYSTEM_API UBTRHandler_Base : public UObject
 {
 	GENERATED_BODY()
 

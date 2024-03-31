@@ -44,5 +44,5 @@ void UBendTime_Manager::OnStopTimeBend(const FTimeBendOptions Options)
 
 void UBendTime_Manager::RegisterComponent(UBendTime_Register* CompToRegister)
 {
-	RegisteredComps.Add(CompToRegister);
+	RegisteredComps.AddUnique(CompToRegister);
 }

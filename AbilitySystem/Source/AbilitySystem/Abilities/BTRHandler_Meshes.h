@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BendTime_Register_Handler_Base.h"
-#include "BendTime_Register_Handler_Meshes.generated.h"
+#include "BTRHandler_Base.h"
+#include "BTRHandler_Meshes.generated.h"
 
 USTRUCT(Atomic)
 struct FMeshData
@@ -16,7 +16,7 @@ struct FMeshData
 };
 
 UCLASS()
-class ABILITYSYSTEM_API UBendTime_Register_Handler_Meshes : public UBendTime_Register_Handler_Base
+class ABILITYSYSTEM_API UBTRHandler_Meshes : public UBTRHandler_Base
 {
 	GENERATED_BODY()
 

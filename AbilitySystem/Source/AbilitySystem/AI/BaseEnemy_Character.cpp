@@ -3,8 +3,6 @@
 
 #include "BaseEnemy_Character.h"
 
-#include "Components/CapsuleComponent.h"
-
 ABaseEnemy_Character::ABaseEnemy_Character()
 {
 	
@@ -49,7 +47,6 @@ void ABaseEnemy_Character::OnDeath()
 	bIsDead = true;
 	
 	GetMesh()->SetSimulatePhysics(true);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABaseEnemy_Character::OnCorpseDeath()

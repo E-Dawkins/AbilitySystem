@@ -3,9 +3,13 @@
 
 #include "BendTime_Register.h"
 #include "BendTime_Manager.h"
-#include "BendTime_Register_Handler_Base.h"
-#include "BendTime_Register_Handler_Meshes.h"
+#include "BTRHandler_AI.h"
+#include "BTRHandler_Base.h"
+#include "BTRHandler_Meshes.h"
+#include "BTRHandler_Particles.h"
+#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 void UBendTime_Register::BeginPlay()
 {
@@ -53,7 +57,9 @@ void UBendTime_Register::OnStartTimeStop(FTimeBendOptions Options)
 	RunHandlers();
 	
 	GetOwner()->SetActorTickEnabled(false);
-	Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->SetSimulatePhysics(false);
+
+	if (const auto PrimComp = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent()))
+		PrimComp->SetSimulatePhysics(false);
 }
 
 void UBendTime_Register::OnEndTimeStop(FTimeBendOptions Options)
@@ -62,16 +68,22 @@ void UBendTime_Register::OnEndTimeStop(FTimeBendOptions Options)
 		return;
 	
 	GetOwner()->SetActorTickEnabled(bActorTickEnabled);
-	Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->SetSimulatePhysics(bSimulatePhysics);
+
+	if (const auto PrimComp = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent()))
+		PrimComp->SetSimulatePhysics(bSimulatePhysics);
 
 	EndHandlers();
 }
 
 void UBendTime_Register::RunHandlers()
 {
+	// Special handlers, just run them with root component
+	if (HandlerOptions.bAIHandler) HandlerPointers[2]->StartHandle(GetOwner()->GetRootComponent());
+	
+	// Other handlers are ran with their respective components
 	for (UActorComponent* Comp : GetOwner()->GetComponents())
 	{
-		if (UBendTime_Register_Handler_Base* Handler = GetHandler(Comp))
+		if (UBTRHandler_Base* Handler = GetHandler(Comp))
 		{
 			Handler->StartHandle(Comp);
 		}
@@ -80,9 +92,13 @@ void UBendTime_Register::RunHandlers()
 
 void UBendTime_Register::EndHandlers()
 {
+	// Special handlers, just run them with this component
+	if (HandlerOptions.bAIHandler) HandlerPointers[2]->EndHandle(GetOwner()->GetRootComponent());
+	
+	// Other handlers are ran with their respective components
 	for (UActorComponent* Comp : GetOwner()->GetComponents())
 	{
-		if (UBendTime_Register_Handler_Base* Handler = GetHandler(Comp))
+		if (UBTRHandler_Base* Handler = GetHandler(Comp))
 		{
 			Handler->EndHandle(Comp);
 		}
@@ -91,13 +107,21 @@ void UBendTime_Register::EndHandlers()
 
 void UBendTime_Register::RegisterHandlers()
 {
-	HandlerPointers.Add(NewObject<UBendTime_Register_Handler_Meshes>());
+	HandlerPointers.Add(NewObject<UBTRHandler_Meshes>());
+	HandlerPointers.Add(NewObject<UBTRHandler_Particles>());
+	HandlerPointers.Add(NewObject<UBTRHandler_AI>());
 }
 
-UBendTime_Register_Handler_Base* UBendTime_Register::GetHandler(UActorComponent* ActorComp)
+UBTRHandler_Base* UBendTime_Register::GetHandler(UActorComponent* ActorComp)
 {
 	if (HandlerOptions.bMeshHandler && ActorComp->IsA(UMeshComponent::StaticClass()))
 		return HandlerPointers[0];
+
+	if (HandlerOptions.bParticleHandler && ActorComp->IsA(UParticleSystemComponent::StaticClass()))
+		return HandlerPointers[1];
+	
+	if (HandlerOptions.bParticleHandler && ActorComp->IsA(UNiagaraComponent::StaticClass()))
+		return HandlerPointers[1];
 	
 	return nullptr;
 }
