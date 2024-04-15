@@ -24,6 +24,9 @@ private:
 private:
 	UPROPERTY(EditAnywhere, Category="BendTime")
 	FTimeBendOptions Options;
+
+	UPROPERTY(EditAnywhere, Category="BendTime")
+	bool bDebug = false;
 	
 private:
 	bool bIsBendingTime = false;

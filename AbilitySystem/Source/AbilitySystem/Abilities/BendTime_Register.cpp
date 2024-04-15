@@ -4,12 +4,24 @@
 #include "BendTime_Register.h"
 #include "BendTime_Manager.h"
 #include "BTRHandler_AI.h"
+#include "BTRHandler_Animation.h"
 #include "BTRHandler_Base.h"
 #include "BTRHandler_Meshes.h"
 #include "BTRHandler_Particles.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+
+UBendTime_Register::UBendTime_Register()
+	: bIgnoreTimeBend(false)
+	, HandlerOptions(FHandlerOptions())
+	, HandlerPointers(TArray<UBTRHandler_Base*>())
+	, CustomDilation(1.f)
+	, bActorTickEnabled(true)
+	, bSimulatePhysics(false)
+{
+	
+}
 
 void UBendTime_Register::BeginPlay()
 {
@@ -33,7 +45,7 @@ void UBendTime_Register::OnStartTimeSlow(FTimeBendOptions Options)
 	}
 }
 
-void UBendTime_Register::OnEndTimeSlow(FTimeBendOptions Options)
+void UBendTime_Register::OnEndTimeSlow(FTimeBendOptions Options) const
 {
 	if (bIgnoreTimeBend)
 	{
@@ -83,7 +95,7 @@ void UBendTime_Register::RunHandlers()
 	// Other handlers are ran with their respective components
 	for (UActorComponent* Comp : GetOwner()->GetComponents())
 	{
-		if (UBTRHandler_Base* Handler = GetHandler(Comp))
+		for (const auto Handler : GetHandlers(Comp))
 		{
 			Handler->StartHandle(Comp);
 		}
@@ -98,7 +110,7 @@ void UBendTime_Register::EndHandlers()
 	// Other handlers are ran with their respective components
 	for (UActorComponent* Comp : GetOwner()->GetComponents())
 	{
-		if (UBTRHandler_Base* Handler = GetHandler(Comp))
+		for (const auto Handler : GetHandlers(Comp))
 		{
 			Handler->EndHandle(Comp);
 		}
@@ -110,18 +122,24 @@ void UBendTime_Register::RegisterHandlers()
 	HandlerPointers.Add(NewObject<UBTRHandler_Meshes>());
 	HandlerPointers.Add(NewObject<UBTRHandler_Particles>());
 	HandlerPointers.Add(NewObject<UBTRHandler_AI>());
+	HandlerPointers.Add(NewObject<UBTRHandler_Animation>());
 }
 
-UBTRHandler_Base* UBendTime_Register::GetHandler(UActorComponent* ActorComp)
+TArray<UBTRHandler_Base*> UBendTime_Register::GetHandlers(const UActorComponent* ActorComp)
 {
+	TArray<UBTRHandler_Base*> Handlers;
+	
 	if (HandlerOptions.bMeshHandler && ActorComp->IsA(UMeshComponent::StaticClass()))
-		return HandlerPointers[0];
+		Handlers.Add(HandlerPointers[0]);
 
 	if (HandlerOptions.bParticleHandler && ActorComp->IsA(UParticleSystemComponent::StaticClass()))
-		return HandlerPointers[1];
+		Handlers.Add(HandlerPointers[1]);
 	
 	if (HandlerOptions.bParticleHandler && ActorComp->IsA(UNiagaraComponent::StaticClass()))
-		return HandlerPointers[1];
+		Handlers.Add(HandlerPointers[1]);
+
+	if (HandlerOptions.bAnimHandler && ActorComp->IsA(USkeletalMeshComponent::StaticClass()))
+		Handlers.Add(HandlerPointers[3]);
 	
-	return nullptr;
+	return Handlers;
 }

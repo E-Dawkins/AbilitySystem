@@ -38,5 +38,8 @@ void UAb_BendTime::ToggleTimeBend()
 		}
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, bIsBendingTime ? FColor::Green : FColor::Red, "Bending Time");
+	if (bDebug)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, bIsBendingTime ? FColor::Green : FColor::Red, "Bending Time");
+	}
 }
